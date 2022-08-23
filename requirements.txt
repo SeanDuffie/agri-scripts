@@ -1,3 +1,4 @@
+picamera
 opencv-python
 numpy
 glob2
