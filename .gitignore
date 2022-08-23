@@ -1,6 +1,5 @@
 # Picture directory
-autocaps/
-# *.jpg
+# autocaps/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

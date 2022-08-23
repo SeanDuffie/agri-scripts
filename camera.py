@@ -17,7 +17,7 @@ with PiCamera() as camera:
     # Acquire current time
     NOW = datetime.now()
     H = NOW.strftime("%H")
-    IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%H:%M:%S.jpg".format(SDIR))
+    IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(SDIR))
 
     # If during inactive hours, do nothing
     if (int(H) >= 7 or int(H) == 0):
