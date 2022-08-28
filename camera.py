@@ -6,62 +6,67 @@ Docstring for camera.py.
 from datetime import datetime
 from time import sleep
 import os
-import glob
-from picamera import PiCamera
-
 import cv2
+import glob
+import numpy
+from serial.tools import list_ports
+# from picamera import PiCamera
 
-SDIR = os.getcwd()
+# Acquire initial data
+RTDIR = os.getcwd()
+IMGDIR = RTDIR + "/autocaps"
+print("Root: ", RTDIR)
+print("Images: ", IMGDIR)
 
-with PiCamera() as camera:
-    # Acquire current time
-    NOW = datetime.now()
-    H = NOW.strftime("%H")
-    IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(SDIR))
+VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
+FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
+FPS = 60                                        # video fps
+IMG_SIZE = (1920, 1080)
 
-    # If during inactive hours, do nothing
-    if (int(H) >= 7 or int(H) == 0):
-    # if (False):
-        ### Start Acquire Image ###
-        camera.start_preview()
-        sleep(5) # wait for camera to focus
-        # Capture image and stop
-        camera.capture(IMG_NAME)
-        camera.stop_preview()
-        #### End Acquire Image ####
+NOW = datetime.now()
+H = NOW.strftime("%H")
 
-
-        ### TODO: Start Acquire Sensor Measurements ###
-        
-        #### End Acquire Sensor Measurements ####
-
-
-        ### Post Processing Video Compilation ###
-        # Read in current directory of images
-        IMG_ARR = []
-        IMG_SIZE = (0, 0)
-        for filename in glob.glob('{0}/autocaps/*.jpg'.format(SDIR)):
-            # Read in Raw image
-            img = cv2.imread(filename)
-            height, width, layers = img.shape
-            IMG_SIZE = (width, height)                   # image size
-
-            # TODO: Add Timestamp
+# If during inactive hours, do nothing
+if (int(H) >= 7 or int(H) == 0):
+# if (True):
+    # ### Start Acquire Image ###
+    # with PiCamera() as camera:
+    #     camera.start_preview()
+    #     sleep(5) # wait for camera to focus
+    #     # ## Capture image and stop
+    #     IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
+    #     camera.capture(IMG_NAME)
+    #     camera.stop_preview()
+    # #### End Acquire Image ####
 
 
-            # TODO: Append Sensor data somehow
+    ### TODO: Start Acquire Sensor Measurements ###
+    # Identifying ports...
+    port = list(list_ports.comports())
+    for p in port:
+        print(p.device)
+    #### End Acquire Sensor Measurements ####
 
 
-            # Add image to array
-            IMG_ARR.append(img)
+    ### Post Processing Video Compilation ###
+    IMG_ARR = []
+    # Read in current directory of images
+    print("Reading in Images...")
+    images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg")]
+    images.sort()
+    OUT = cv2.VideoWriter(VID_NAME, cv2.VideoWriter_fourcc(*'MP4V'), FPS, IMG_SIZE)
+    # Compile image array into a video FIXME: This is a broken video
+    for filename in images:
+        img = cv2.imread(filename)  # Read in Raw image
 
-        # Compile image array into a video
-        VID_NAME = '{0}/time-lapse.mp4'.format(SDIR) # video name
-        FOURCC = cv2.VideoWriter_fourcc(*'MP4V')    # video format
-        FPS = 60                                    # video fps
-        OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
-        OUT.write(list(enumerate(IMG_ARR))) # writes out each frame to the video file
-        OUT.release()
-        #### End Post Processing Video Compilation ####
-    else:
-        print("Inactive hours")
+        # TODO: Add Timestamp
+
+        # TODO: Append Sensor data somehow
+
+        IMG_ARR.append(img)         # Add image to array
+        OUT.write(img)              # writes out each frame to the video file
+    OUT.release()
+    print("Released!")
+    #### End Post Processing Video Compilation ####
+else:
+    print("Inactive hours")
