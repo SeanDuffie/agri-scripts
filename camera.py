@@ -14,7 +14,7 @@ from serial.tools import list_ports
 
 # Acquire initial data
 RTDIR = os.getcwd()
-IMGDIR = RTDIR + "/autocaps"
+IMGDIR = RTDIR + "/autocaps/autocaps/"
 print("Root: ", RTDIR)
 print("Images: ", IMGDIR)
 
@@ -54,10 +54,11 @@ if (int(H) >= 7 or int(H) == 0):
     print("Reading in Images...")
     images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg")]
     images.sort()
-    OUT = cv2.VideoWriter(VID_NAME, cv2.VideoWriter_fourcc(*'MP4V'), FPS, IMG_SIZE)
     # Compile image array into a video FIXME: This is a broken video
+    print("Apply Modifications and compile video")
+    OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
     for filename in images:
-        img = cv2.imread(filename)  # Read in Raw image
+        img = cv2.imread(IMGDIR + filename)  # Read in Raw image
 
         # TODO: Add Timestamp
 
