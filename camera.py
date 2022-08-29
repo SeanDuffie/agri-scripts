@@ -20,7 +20,7 @@ RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 print("Root: ", RTDIR)
 print("Images: ", IMGDIR)
-print("Output: ./time-lapse.mp4")
+print("Output: ", RTDIR + "/time-lapse.mp4")
 print()
 
 VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
@@ -74,6 +74,7 @@ if (int(H) >= 7 or int(H) == 0):
         print("Waiting for sensors...")
         ser.write('1'.encode('utf-8'))
         sleep(1)
+    print()
 
     # Receive the Response from the sensors
     FEEDBACK = ser.readline()
