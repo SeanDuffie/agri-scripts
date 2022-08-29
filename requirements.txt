@@ -1,4 +1,4 @@
 picamera
 opencv-python
 numpy
-glob2
+pyserial
