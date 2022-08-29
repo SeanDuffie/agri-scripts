@@ -7,14 +7,13 @@ from datetime import datetime
 from time import sleep
 import os
 import cv2
-import glob
-import numpy
+# import numpy
 from serial.tools import list_ports
 # from picamera import PiCamera
 
 # Acquire initial data
 RTDIR = os.getcwd()
-IMGDIR = RTDIR + "/autocaps/autocaps/"
+IMGDIR = RTDIR + "/autocaps/"
 print("Root: ", RTDIR)
 print("Images: ", IMGDIR)
 
@@ -45,29 +44,36 @@ if (int(H) >= 7 or int(H) == 0):
     port = list(list_ports.comports())
     for p in port:
         print(p.device)
+
+    # Send the Request for readings
+
+    # Receive the Response from the sensors
+
+    # Process and Store the new data
+    
     #### End Acquire Sensor Measurements ####
 
 
-    ### Post Processing Video Compilation ###
-    IMG_ARR = []
-    # Read in current directory of images
-    print("Reading in Images...")
-    images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg")]
-    images.sort()
-    # Compile image array into a video FIXME: This is a broken video
-    print("Apply Modifications and compile video")
-    OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
-    for filename in images:
-        img = cv2.imread(IMGDIR + filename)  # Read in Raw image
+    # ### Post Processing Video Compilation ###
+    # IMG_ARR = []
+    # # Read in current directory of images
+    # print("Reading in Images...")
+    # images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg")]
+    # images.sort()
+    # # Compile image array into a video FIXME: This is a broken video
+    # print("Apply Modifications and compile video")
+    # OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
+    # for filename in images:
+    #     img = cv2.imread(IMGDIR + filename)  # Read in Raw image
 
-        # TODO: Add Timestamp
+    #     # TODO: Add Timestamp
 
-        # TODO: Append Sensor data somehow
+    #     # TODO: Append Sensor data somehow
 
-        IMG_ARR.append(img)         # Add image to array
-        OUT.write(img)              # writes out each frame to the video file
-    OUT.release()
-    print("Released!")
-    #### End Post Processing Video Compilation ####
+    #     IMG_ARR.append(img)         # Add image to array
+    #     OUT.write(img)              # writes out each frame to the video file
+    # OUT.release()
+    # print("Released!")
+    # #### End Post Processing Video Compilation ####
 else:
     print("Inactive hours")
