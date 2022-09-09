@@ -6,7 +6,9 @@ Docstring for camera.py.
 from datetime import datetime
 from time import sleep
 import os
+from os.path import exists
 import cv2
+import json
 # import numpy
 import serial
 from serial.tools import list_ports
@@ -18,9 +20,11 @@ from serial.tools import list_ports
 # Acquire initial data
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
+OUTDAT = RTDIR + "/data/"
 print("Root: ", RTDIR)
-print("Images: ", IMGDIR)
-print("Output: ", RTDIR + "/time-lapse.mp4")
+print("Image Dir: ", IMGDIR)
+print("Data Dir: ", OUTDAT)
+print("Output Video: ", RTDIR + "/time-lapse.mp4")
 print()
 
 VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
@@ -37,6 +41,7 @@ print()
 # If during inactive hours, do nothing
 if (int(H) >= 7 or int(H) == 0):
 # if (True):
+    # FIXME: 64-bit PiCamera does not work yet...
     # ### Start Acquire Image ###
     # with PiCamera() as camera:
     #     print("Starting Camera...")
@@ -51,7 +56,7 @@ if (int(H) >= 7 or int(H) == 0):
     # #### End Acquire Image ####
 
 
-    ### TODO: Start Acquire Sensor Measurements ###
+    ### Start Acquire Sensor Measurements ###
     # Identifying ports...
     print("Identifying current ports... ")
     PORT_LIST = list(list_ports.comports())
@@ -61,7 +66,8 @@ if (int(H) >= 7 or int(H) == 0):
 
     # Setting up Serial connection
     ser = serial.Serial(
-        port='/dev/ttyACM0',
+        # port='/dev/ttyACM0', # use this to manually specify port
+        port=PORT_LIST[0].device,
         baudrate=115200,
         parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE,
@@ -77,15 +83,32 @@ if (int(H) >= 7 or int(H) == 0):
     print()
 
     # Receive the Response from the sensors
-    FEEDBACK = ser.readline()
+    SENSOR_ARR = list()
     try:
-        print(FEEDBACK.decode("Ascii"))
+        FEEDBACK = ser.readline()
+        SENSOR_READ = FEEDBACK.decode("Ascii")
+        SENSOR_ARR = SENSOR_READ.split(",")
+        print(SENSOR_READ)
+        print(SENSOR_ARR)
         print()
     except:
         print("Something went wrong with decoding!")
         pass
 
+    # Read data history
+    data = {}
+    if (exists(OUTDAT + "dat.json")):
+        f = open(OUTDAT + "dat.json")
+        data = json.load(f)
+        f.close()
+
     # Process and Store the new data
+    data["TIME"] += NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss")
+    data["LIGHT"] += SENSOR_ARR[0]
+    data["SOIL"] += SENSOR_ARR[1]
+    data["TEMPC"] += SENSOR_ARR[2]
+    data["TEMPF"] += str(float(SENSOR_ARR[2])*(9/5)+32)
+    data["HUMID"] += SENSOR_ARR[3]
 
     #### End Acquire Sensor Measurements ####
 
