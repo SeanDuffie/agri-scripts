@@ -103,12 +103,17 @@ if (int(H) >= 7 or int(H) == 0):
         f.close()
 
     # Process and Store the new data
-    data["TIME"] += NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss")
-    data["LIGHT"] += SENSOR_ARR[0]
-    data["SOIL"] += SENSOR_ARR[1]
-    data["TEMPC"] += SENSOR_ARR[2]
-    data["TEMPF"] += str(float(SENSOR_ARR[2])*(9/5)+32)
-    data["HUMID"] += SENSOR_ARR[3]
+    data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
+    data["LIGHT"].append(float(SENSOR_ARR[0]))
+    data["SOIL"].append(float(SENSOR_ARR[1]))
+    data["TEMPC"].append(float(SENSOR_ARR[2]))
+    data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
+    data["HUMID"].append(float(SENSOR_ARR[3]))
+
+    json_object = json.dumps(data, indent=4)
+    print(json_object)
+    with open(OUTDAT + "dat.json", "w") as f:
+        f.write(json_object)
 
     #### End Acquire Sensor Measurements ####
 
