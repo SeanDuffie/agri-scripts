@@ -1,5 +1,8 @@
-# Picture directory
+# Inputs
 autocaps/
+*.json
+
+# Outputs
 *.mp4
 
 # Byte-compiled / optimized / DLL files
