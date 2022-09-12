@@ -2,3 +2,5 @@ picamera
 opencv-python
 numpy
 pyserial
+
+# apt install -y python3-picamera2

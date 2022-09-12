@@ -12,7 +12,8 @@ import json
 # import numpy
 import serial
 from serial.tools import list_ports
-# from picamera import PiCamera
+# from picamera import PiCamera                   # For 32-bit OS
+from picamera2 import Picamera2, Preview        # For 64-bit OS
 
 # Versions
 # print("Package Versions for Diagnostics: ")
@@ -21,11 +22,11 @@ from serial.tools import list_ports
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
-print("Root: ", RTDIR)
-print("Image Dir: ", IMGDIR)
-print("Data Dir: ", OUTDAT)
-print("Output Video: ", RTDIR + "/time-lapse.mp4")
-print()
+# print("Root: ", RTDIR)
+# print("Image Dir: ", IMGDIR)
+# print("Data Dir: ", OUTDAT)
+# print("Output Video: ", RTDIR + "/time-lapse.mp4")
+# print()
 
 VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
@@ -57,12 +58,12 @@ if (int(H) >= 7 or int(H) == 0):
 
 
     ### Start Acquire Sensor Measurements ###
-    # Identifying ports...
-    print("Identifying current ports... ")
+    ## Identifying ports...
+    # print("Identifying current ports... ")
     PORT_LIST = list(list_ports.comports())
-    for p in PORT_LIST:
-        print("  - ", p.device)
-    print()
+    # for p in PORT_LIST:
+    #     print("  - ", p.device)
+    # print()
 
     # Setting up Serial connection
     ser = serial.Serial(
@@ -79,7 +80,7 @@ if (int(H) >= 7 or int(H) == 0):
     while ser.in_waiting == 0:
         print("Waiting for sensors...")
         ser.write('1'.encode('utf-8'))
-        sleep(1)
+        sleep(.5)
     print()
 
     # Receive the Response from the sensors
@@ -88,7 +89,6 @@ if (int(H) >= 7 or int(H) == 0):
         FEEDBACK = ser.readline()
         SENSOR_READ = FEEDBACK.decode("Ascii")
         SENSOR_ARR = SENSOR_READ.split(",")
-        print(SENSOR_READ)
         print(SENSOR_ARR)
         print()
     except:
@@ -96,7 +96,14 @@ if (int(H) >= 7 or int(H) == 0):
         pass
 
     # Read data history
-    data = {}
+    data = {
+        "TIME": list(),
+        "LIGHT": [],
+        "SOIL": [],
+        "TEMPC": [],
+        "TEMPF": [],
+        "HUMID": []
+    }
     if (exists(OUTDAT + "dat.json")):
         f = open(OUTDAT + "dat.json")
         data = json.load(f)
@@ -111,7 +118,7 @@ if (int(H) >= 7 or int(H) == 0):
     data["HUMID"].append(float(SENSOR_ARR[3]))
 
     json_object = json.dumps(data, indent=4)
-    print(json_object)
+    # print(json.dumps(data, indent=-1))
     with open(OUTDAT + "dat.json", "w") as f:
         f.write(json_object)
 
