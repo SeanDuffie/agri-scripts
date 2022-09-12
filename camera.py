@@ -40,23 +40,8 @@ print()
 
 
 # If during inactive hours, do nothing
-if (int(H) >= 7 or int(H) == 0):
-# if (True):
-    # FIXME: 64-bit PiCamera does not work yet...
-    # ### Start Acquire Image ###
-    # with PiCamera() as camera:
-    #     print("Starting Camera...")
-    #     camera.start_preview()
-    #     sleep(5) # wait for camera to focus
-    #     ## Capture image and stop
-    #     IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
-    #     camera.capture(IMG_NAME)
-    #     camera.stop_preview()
-    #     print("Picture Acquired!")
-    #     print()
-    # #### End Acquire Image ####
-
-
+# if (int(H) >= 7 or int(H) == 0):
+if (True):
     ### Start Acquire Sensor Measurements ###
     ## Identifying ports...
     # print("Identifying current ports... ")
@@ -125,7 +110,48 @@ if (int(H) >= 7 or int(H) == 0):
     #### End Acquire Sensor Measurements ####
 
 
-    # ### Post Processing Video Compilation ###
+
+    ### Start Acquire Image ###
+    array = []
+    ## If 32 bit system
+    # with PiCamera() as camera:
+    #     print("Starting Camera...")
+    #     camera.start_preview()
+    #     sleep(1) # wait for camera to focus
+    #     ## Capture image and stop
+    #     IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
+    #     camera.capture(IMG_NAME)
+    #     camera.stop_preview()
+    #     print("Picture Acquired!")
+    #     print()
+    ## If 64 bit system
+    with Picamera2() as camera:
+        print("Starting Camera...")
+        capture_config = camera.create_still_configuration()
+        camera.start(show_preview=True)
+        sleep(1) # wait for camera to focus
+
+        ## Capture image and stop
+        # metadata = camera.capture_metadata()
+        # print(metadata["ExposureTime"], metadata["AnalogueGain"])
+        IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
+        # camera.start_and_capture_array()
+        camera.capture_file(IMG_NAME)
+        # array = camera.switch_mode_and_capture_array(capture_config, IMG_NAME)
+        print("Picture Acquired!")
+        print()
+    #### End Acquire Image ####
+
+
+    ### Start Post Processing Current Image ###
+    #     # TODO: Add Timestamp
+
+    #     # TODO: Append Sensor data somehow
+
+    #### End Post Processing Current Image ####
+
+
+    # ### Start Post Processing Video Compilation ###
     # IMG_ARR = []
     # # Read in current directory of images
     # print("Reading in Images...")
@@ -136,11 +162,6 @@ if (int(H) >= 7 or int(H) == 0):
     # OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
     # for filename in images:
     #     img = cv2.imread(IMGDIR + filename)  # Read in Raw image
-
-    #     # TODO: Add Timestamp
-
-    #     # TODO: Append Sensor data somehow
-
     #     IMG_ARR.append(img)         # Add image to array
     #     OUT.write(img)              # writes out each frame to the video file
     # OUT.release()
