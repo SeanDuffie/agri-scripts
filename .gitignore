@@ -1,5 +1,10 @@
-# Picture directory
+# Inputs
 autocaps/
+data/
+
+# Outputs
+*.mp4
+*.avi
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
