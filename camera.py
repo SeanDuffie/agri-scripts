@@ -122,10 +122,10 @@ with open(OUTDAT + "dat.json", "w") as f:
     f.write(json_object)
 #### End Acquire Sensor Measurements ####
 
+
+### Start Acquire Image ###
 # If during inactive hours, do nothing
 if int(H) >= 7 or int(H) == 0 or True:
-    ### Start Acquire Image ###
-
     ## If 32 bit system
     # with PiCamera() as camera:
     #     print("Starting Camera...")
@@ -150,10 +150,9 @@ if int(H) >= 7 or int(H) == 0 or True:
 
     print("Picture Acquired!")
     print()
-    #### End Acquire Image ####
 else:
     print("Inactive hours")
-print(cur_img[0][0])
+#### End Acquire Image ####
 
 
 ### Start Post Processing Current Image ###
