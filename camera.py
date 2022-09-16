@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Docstring for camera.py.
 """
@@ -9,12 +9,15 @@ import os
 from os.path import exists
 import cv2
 import json
+import requests
 # import numpy
 import serial
 from serial.tools import list_ports
 # from picamera import PiCamera                   # For 32-bit OS
 from picamera2 import Picamera2, Preview        # For 64-bit OS
 
+
+### Start Initial Setup ###
 # Versions
 # print("Package Versions for Diagnostics: ")
 
@@ -22,11 +25,11 @@ from picamera2 import Picamera2, Preview        # For 64-bit OS
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
-# print("Root: ", RTDIR)
-# print("Image Dir: ", IMGDIR)
-# print("Data Dir: ", OUTDAT)
-# print("Output Video: ", RTDIR + "/time-lapse.mp4")
-# print()
+print("Root: ", RTDIR)
+print("Image Dir: ", IMGDIR)
+print("Data Dir: ", OUTDAT)
+print("Output Video: ", RTDIR + "/time-lapse.mp4")
+print()
 
 VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
@@ -39,78 +42,87 @@ print("Current time: ", NOW)
 print()
 
 
-# If during inactive hours, do nothing
-# if (int(H) >= 7 or int(H) == 0):
-if (True):
-    ### Start Acquire Sensor Measurements ###
-    ## Identifying ports...
-    # print("Identifying current ports... ")
-    PORT_LIST = list(list_ports.comports())
-    # for p in PORT_LIST:
-    #     print("  - ", p.device)
-    # print()
+if int(H) == 7:
+    webhook_url = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
+    data = { 'name': 'This is an example for webhook' }
+    # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'}) #leaving this in in case I decide to use json configurations later
+    requests.post(webhook_url)
+#### End Initial Setup ####
 
-    # Setting up Serial connection
-    ser = serial.Serial(
-        # port='/dev/ttyACM0', # use this to manually specify port
-        port=PORT_LIST[0].device,
-        baudrate=115200,
-        parity=serial.PARITY_NONE,
-        stopbits=serial.STOPBITS_ONE,
-        bytesize=serial.EIGHTBITS,
-        timeout=1
-    )
 
-    # Send out requests until a response is received
-    while ser.in_waiting == 0:
-        print("Waiting for sensors...")
-        ser.write('1'.encode('utf-8'))
-        sleep(.5)
+
+
+
+### Start Acquire Sensor Measurements ###
+## Identifying ports...
+# print("Identifying current ports... ")
+PORT_LIST = list(list_ports.comports())
+# for p in PORT_LIST:
+#     print("  - ", p.device)
+# print()
+
+# Setting up Serial connection
+ser = serial.Serial(
+    # port='/dev/ttyACM0', # use this to manually specify port
+    port=PORT_LIST[0].device,
+    baudrate=115200,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS,
+    timeout=10
+)
+
+# Send out requests until a response is received
+while ser.in_waiting == 0:
+    print("Waiting for sensors...")
+    ser.write('1'.encode('utf-8'))
+    sleep(.5)
+print()
+
+# Receive the Response from the sensors
+SENSOR_ARR = list()
+try:
+    FEEDBACK = ser.readline()
+    SENSOR_READ = FEEDBACK.decode("Ascii")
+    SENSOR_ARR = SENSOR_READ.split(",")
+    print(SENSOR_ARR)
     print()
+except:
+    print("Something went wrong with decoding!")
+    pass
 
-    # Receive the Response from the sensors
-    SENSOR_ARR = list()
-    try:
-        FEEDBACK = ser.readline()
-        SENSOR_READ = FEEDBACK.decode("Ascii")
-        SENSOR_ARR = SENSOR_READ.split(",")
-        print(SENSOR_ARR)
-        print()
-    except:
-        print("Something went wrong with decoding!")
-        pass
+# Read data history
+data = {
+    "TIME": list(),
+    "LIGHT": [],
+    "SOIL": [],
+    "TEMPC": [],
+    "TEMPF": [],
+    "HUMID": []
+}
+if (exists(OUTDAT + "dat.json")):
+    f = open(OUTDAT + "dat.json")
+    data = json.load(f)
+    f.close()
 
-    # Read data history
-    data = {
-        "TIME": list(),
-        "LIGHT": [],
-        "SOIL": [],
-        "TEMPC": [],
-        "TEMPF": [],
-        "HUMID": []
-    }
-    if (exists(OUTDAT + "dat.json")):
-        f = open(OUTDAT + "dat.json")
-        data = json.load(f)
-        f.close()
+# Process and Store the new data
+data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
+data["LIGHT"].append(float(SENSOR_ARR[0]))
+data["SOIL"].append(float(SENSOR_ARR[1]))
+data["TEMPC"].append(float(SENSOR_ARR[2]))
+data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
+data["HUMID"].append(float(SENSOR_ARR[3]))
 
-    # Process and Store the new data
-    data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
-    data["LIGHT"].append(float(SENSOR_ARR[0]))
-    data["SOIL"].append(float(SENSOR_ARR[1]))
-    data["TEMPC"].append(float(SENSOR_ARR[2]))
-    data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
-    data["HUMID"].append(float(SENSOR_ARR[3]))
-
-    json_object = json.dumps(data, indent=4)
-    # print(json.dumps(data, indent=-1))
-    with open(OUTDAT + "dat.json", "w") as f:
-        f.write(json_object)
-
-    #### End Acquire Sensor Measurements ####
+json_object = json.dumps(data, indent=4)
+# print(json.dumps(data, indent=-1))
+with open(OUTDAT + "dat.json", "w") as f:
+    f.write(json_object)
+#### End Acquire Sensor Measurements ####
 
 
-
+# If during inactive hours, do nothing
+# if (True):
+if int(H) >= 7 or int(H) == 0 or True:
     ### Start Acquire Image ###
     array = []
     ## If 32 bit system
@@ -141,6 +153,8 @@ if (True):
         print("Picture Acquired!")
         print()
     #### End Acquire Image ####
+else:
+    print("Inactive hours")
 
 
     ### Start Post Processing Current Image ###
@@ -151,7 +165,8 @@ if (True):
     #### End Post Processing Current Image ####
 
 
-    # ### Start Post Processing Video Compilation ###
+### Start Post Processing Video Compilation ###
+if int(H) == 0:
     # IMG_ARR = []
     # # Read in current directory of images
     # print("Reading in Images...")
@@ -166,6 +181,8 @@ if (True):
     #     OUT.write(img)              # writes out each frame to the video file
     # OUT.release()
     # print("Released!")
-    # #### End Post Processing Video Compilation ####
-else:
-    print("Inactive hours")
+    webhook_url = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
+    data = { 'name': 'This is an example for webhook' }
+    # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'})
+    requests.post(webhook_url)
+#### End Post Processing Video Compilation ####
