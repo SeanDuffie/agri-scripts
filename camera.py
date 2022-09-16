@@ -47,7 +47,6 @@ RAW_SIZE = (3280, 2465)                         # camera resolution
 IMG_SIZE = (1920, 1080)                         # video resolution
 
 print("Root: ", RTDIR)
-print("Image Dir: ", IMGDIR)
 print("Data Dir: ", OUTDAT)
 print("Output Image: ", IMG_NAME)
 print("Output Video: ", VID_NAME)
@@ -133,20 +132,19 @@ with open(OUTDAT + "dat.json", "w") as f:
 
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
-if int(H) >= 7 or int(H) == 0: # or True:
-    print("Starting Camera...")
+if int(H) >= 7 or int(H) == 0:
+    print("Starting Camera...\n")
     if os.name.find("64"):
         ## If 64 bit system
         picam2 = Picamera2()
         capture_config = picam2.create_still_configuration(main={"size": RAW_SIZE, "format": "RGB888"})
-        picam2.start(config=capture_config, show_preview=False)
+        picam2.start(config=capture_config)
         sleep(1) # wait for camera to focus
 
         ## Capture image and stop
-        metadata = picam2.capture_metadata()
-        # picam2.capture_file(IMG_NAME)
-        cur_img = picam2.switch_mode_and_capture_array(IMG_NAME)
-        cv2.resize(cur_img, IMG_SIZE)
+        # metadata = picam2.capture_metadata()
+        cur_img = picam2.capture_array()
+        cur_img = cv2.resize(cur_img, IMG_SIZE)
     else:
         ## If 32 bit system
         with PiCamera() as camera:
@@ -158,44 +156,46 @@ if int(H) >= 7 or int(H) == 0: # or True:
             camera.stop_preview()
 
     ### Start Post Processing Current Image ###
-    print("Processing Image...")
+    print("\nProcessing Image...")
     # Add Timestamp
     font = cv2.FONT_HERSHEY_SIMPLEX
-    fontScale = 2
+    fontScale = 1
     color = (255, 255, 255)
     thickness = 2
-    cv2.putText(cur_img, NAME, (100,100), font, fontScale, color, thickness, cv2.LINE_AA)
+    cv2.putText(cur_img, NAME, (50,50), font, fontScale, color, thickness, cv2.LINE_AA)
 
     # TODO: Append Sensor data somehow
 
     cv2.imwrite(IMG_NAME, cur_img)
     #### End Post Processing Current Image ####
 
-    print("Picture Acquired!")
-    print()
+    print("Picture Acquired!\n")
 else:
-    print("Inactive hours")
+    print("Inactive hours\n")
 #### End Acquire Image ####
 
 
 ### Start Post Processing Video Compilation ###
 if int(H) == 0:
-    # IMG_ARR = []
-    # # Read in current directory of images
-    # print("Reading in Images...")
-    # images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg")]
-    # images.sort()
-    # # Compile image array into a video FIXME: This is a broken video
-    # print("Apply Modifications and compile video")
-    # OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
-    # for filename in images:
-    #     img = cv2.imread(IMGDIR + filename)  # Read in Raw image
-    #     IMG_ARR.append(img)         # Add image to array
-    #     OUT.write(img)              # writes out each frame to the video file
-    # OUT.release()
-    # print("Released!")
+    IMG_ARR = []
+    # Read in current directory of images
+    print("Reading in Images...")
+    images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg") and img.find("_02h")]
+    images.sort()
+    # Compile image array into a video
+    print("Compiling video...")
+    OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
+    for filename in images:
+        img = cv2.imread(IMGDIR + filename)  # Read in Raw image
+        IMG_ARR.append(img)         # Add image to array
+        OUT.write(img)              # writes out each frame to the video file
+    OUT.release()
+    print("Time-Lapse Released!\n")
+
+    ## Turn of Lamp
     webhook_url = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
     data = { 'name': 'This is an example for webhook' }
     # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'})
     requests.post(webhook_url)
+    print("Goodnight!")
 #### End Post Processing Video Compilation ####
