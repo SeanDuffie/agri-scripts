@@ -192,10 +192,10 @@ if int(H) == 0:
     OUT.release()
     print("Time-Lapse Released!\n")
 
-    ## Turn of Lamp
-    webhook_url = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
-    data = { 'name': 'This is an example for webhook' }
+    ## Turn off Lamp
+    URL = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
+    # data = { 'name': 'This is an example for webhook' }
     # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'})
-    requests.post(webhook_url)
+    requests.post(URL)
     print("Goodnight!")
 #### End Post Processing Video Compilation ####
