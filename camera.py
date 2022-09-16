@@ -82,6 +82,7 @@ print()
 # Receive the Response from the sensors
 SENSOR_ARR = list()
 try:
+    print("Reading Response...")
     FEEDBACK = ser.readline()
     SENSOR_READ = FEEDBACK.decode("Ascii")
     SENSOR_ARR = SENSOR_READ.split(",")
@@ -100,11 +101,12 @@ data = {
     "TEMPF": [],
     "HUMID": []
 }
+print("Loading current file...")
 if (exists(OUTDAT + "dat.json")):
     f = open(OUTDAT + "dat.json")
     data = json.load(f)
     f.close()
-
+print("Appending New Data..")
 # Process and Store the new data
 data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
 data["LIGHT"].append(float(SENSOR_ARR[0]))
@@ -119,12 +121,10 @@ with open(OUTDAT + "dat.json", "w") as f:
     f.write(json_object)
 #### End Acquire Sensor Measurements ####
 
-
 # If during inactive hours, do nothing
-# if (True):
 if int(H) >= 7 or int(H) == 0 or True:
     ### Start Acquire Image ###
-    array = []
+
     ## If 32 bit system
     # with PiCamera() as camera:
     #     print("Starting Camera...")
@@ -134,35 +134,35 @@ if int(H) >= 7 or int(H) == 0 or True:
     #     IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
     #     camera.capture(IMG_NAME)
     #     camera.stop_preview()
-    #     print("Picture Acquired!")
-    #     print()
-    ## If 64 bit system
-    with Picamera2() as camera:
-        print("Starting Camera...")
-        capture_config = camera.create_still_configuration()
-        camera.start(show_preview=True)
-        sleep(1) # wait for camera to focus
 
-        ## Capture image and stop
-        # metadata = camera.capture_metadata()
-        # print(metadata["ExposureTime"], metadata["AnalogueGain"])
-        IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
-        # camera.start_and_capture_array()
-        camera.capture_file(IMG_NAME)
-        # array = camera.switch_mode_and_capture_array(capture_config, IMG_NAME)
-        print("Picture Acquired!")
-        print()
+    ## If 64 bit system
+    picam2 = Picamera2()
+
+    capture_config = picam2.create_still_configuration(main={"size": (3280, 1845), "format": "RGB888"})
+
+    picam2.start(config=capture_config, show_preview=False)
+    sleep(1) # wait for camera to focus
+
+    ## Capture image and stop
+    IMG_NAME = NOW.strftime("autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
+    metadata = picam2.capture_metadata()
+    picam2.capture_file(IMG_NAME)
+    cur_img = picam2.switch_mode_and_capture_array(IMG_NAME)
+
+    print("Picture Acquired!")
+    print()
     #### End Acquire Image ####
 else:
     print("Inactive hours")
+print(cur_img[0][0])
 
 
-    ### Start Post Processing Current Image ###
-    #     # TODO: Add Timestamp
+### Start Post Processing Current Image ###
+#     # TODO: Add Timestamp
 
-    #     # TODO: Append Sensor data somehow
+#     # TODO: Append Sensor data somehow
 
-    #### End Post Processing Current Image ####
+#### End Post Processing Current Image ####
 
 
 ### Start Post Processing Video Compilation ###
