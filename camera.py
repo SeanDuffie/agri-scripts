@@ -29,40 +29,41 @@ print()
 
 
 # Acquire initial data
-RTDIR = os.getcwd()
-IMGDIR = RTDIR + "/autocaps/"
-OUTDAT = RTDIR + "/data/"
-print("Root: ", RTDIR)
-print("Image Dir: ", IMGDIR)
-print("Data Dir: ", OUTDAT)
-print("Output Video: ", RTDIR + "/time-lapse.mp4")
-print()
-
-VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
-FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
-FPS = 60                                        # video fps
-IMG_SIZE = (1920, 1080)
-
 NOW = datetime.now()
 H = NOW.strftime("%H")
+NAME = NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss")
 print("Current time: ", NOW)
 print()
 
+RTDIR = os.getcwd()
+IMGDIR = RTDIR + "/autocaps/"
+OUTDAT = RTDIR + "/data/"
+
+IMG_NAME = "{0}{1}.jpg".format(IMGDIR, NAME)
+VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
+FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
+FPS = 60                                        # video fps
+RAW_SIZE = (3280, 2465)                         # camera resolution
+IMG_SIZE = (1920, 1080)                         # video resolution
+
+print("Root: ", RTDIR)
+print("Image Dir: ", IMGDIR)
+print("Data Dir: ", OUTDAT)
+print("Output Image: ", IMG_NAME)
+print("Output Video: ", VID_NAME)
+print()
+
+
 
 if int(H) == 7:
-    webhook_url = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
-    data = { 'name': 'This is an example for webhook' }
+    URL = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
+    # data = { 'name': 'This is an example for webhook' }
     # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'}) #leaving this in in case I decide to use json configurations later
-    requests.post(webhook_url)
+    requests.post(URL)
 #### End Initial Setup ####
 
 
-
-
-
 ### Start Acquire Sensor Measurements ###
-## Identifying ports...
-# print("Identifying current ports... ")
 PORT_LIST = list(list_ports.comports())
 # for p in PORT_LIST:
 #     print("  - ", p.device)
@@ -116,7 +117,7 @@ else:
     }
 # Process and Store the new data
 print("Appending New Data..")
-data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
+data["TIME"].append(NAME)
 data["LIGHT"].append(float(SENSOR_ARR[0]))
 data["SOIL"].append(float(SENSOR_ARR[1]))
 data["TEMPC"].append(float(SENSOR_ARR[2]))
@@ -132,20 +133,20 @@ with open(OUTDAT + "dat.json", "w") as f:
 
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
-if int(H) >= 7 or int(H) == 0 or True:
+if int(H) >= 7 or int(H) == 0: # or True:
     print("Starting Camera...")
     if os.name.find("64"):
         ## If 64 bit system
         picam2 = Picamera2()
-        capture_config = picam2.create_still_configuration(main={"size": (3280, 1845), "format": "RGB888"})
+        capture_config = picam2.create_still_configuration(main={"size": RAW_SIZE, "format": "RGB888"})
         picam2.start(config=capture_config, show_preview=False)
         sleep(1) # wait for camera to focus
 
         ## Capture image and stop
-        IMG_NAME = NOW.strftime("autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
         metadata = picam2.capture_metadata()
-        picam2.capture_file(IMG_NAME)
+        # picam2.capture_file(IMG_NAME)
         cur_img = picam2.switch_mode_and_capture_array(IMG_NAME)
+        cv2.resize(cur_img, IMG_SIZE)
     else:
         ## If 32 bit system
         with PiCamera() as camera:
@@ -153,23 +154,28 @@ if int(H) >= 7 or int(H) == 0 or True:
             sleep(1) # wait for camera to focus
 
             ## Capture image and stop
-            IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
             camera.capture(IMG_NAME)
             camera.stop_preview()
+
+    ### Start Post Processing Current Image ###
+    print("Processing Image...")
+    # Add Timestamp
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    fontScale = 2
+    color = (255, 255, 255)
+    thickness = 2
+    cv2.putText(cur_img, NAME, (100,100), font, fontScale, color, thickness, cv2.LINE_AA)
+
+    # TODO: Append Sensor data somehow
+
+    cv2.imwrite(IMG_NAME, cur_img)
+    #### End Post Processing Current Image ####
 
     print("Picture Acquired!")
     print()
 else:
     print("Inactive hours")
 #### End Acquire Image ####
-
-
-### Start Post Processing Current Image ###
-#     # TODO: Add Timestamp
-
-#     # TODO: Append Sensor data somehow
-
-#### End Post Processing Current Image ####
 
 
 ### Start Post Processing Video Compilation ###
