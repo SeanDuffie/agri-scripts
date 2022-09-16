@@ -7,19 +7,26 @@ from datetime import datetime
 from time import sleep
 import os
 from os.path import exists
+import struct
 import cv2
 import json
 import requests
 # import numpy
 import serial
 from serial.tools import list_ports
-# from picamera import PiCamera                   # For 32-bit OS
-from picamera2 import Picamera2, Preview        # For 64-bit OS
+if os.name.find("64"):
+    from picamera2 import Picamera2, Preview        # For 64-bit OS
+else:
+    from picamera import PiCamera                   # For 32-bit OS
 
 
 ### Start Initial Setup ###
 # Versions
-# print("Package Versions for Diagnostics: ")
+print("Version Diagnostics:")
+print("OS: ", os.uname()[0], os.uname()[2])
+print("Architecture: ", os.uname()[4])
+print()
+
 
 # Acquire initial data
 RTDIR = os.getcwd()
@@ -126,27 +133,29 @@ with open(OUTDAT + "dat.json", "w") as f:
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
 if int(H) >= 7 or int(H) == 0 or True:
-    ## If 32 bit system
-    # with PiCamera() as camera:
-    #     print("Starting Camera...")
-    #     camera.start_preview()
-    #     sleep(1) # wait for camera to focus
-    #     ## Capture image and stop
-    #     IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
-    #     camera.capture(IMG_NAME)
-    #     camera.stop_preview()
+    print("Starting Camera...")
+    if os.name.find("64"):
+        ## If 64 bit system
+        picam2 = Picamera2()
+        capture_config = picam2.create_still_configuration(main={"size": (3280, 1845), "format": "RGB888"})
+        picam2.start(config=capture_config, show_preview=False)
+        sleep(1) # wait for camera to focus
 
-    ## If 64 bit system
-    picam2 = Picamera2()
-    capture_config = picam2.create_still_configuration(main={"size": (3280, 1845), "format": "RGB888"})
-    picam2.start(config=capture_config, show_preview=False)
-    sleep(1) # wait for camera to focus
+        ## Capture image and stop
+        IMG_NAME = NOW.strftime("autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
+        metadata = picam2.capture_metadata()
+        picam2.capture_file(IMG_NAME)
+        cur_img = picam2.switch_mode_and_capture_array(IMG_NAME)
+    else:
+        ## If 32 bit system
+        with PiCamera() as camera:
+            camera.start_preview()
+            sleep(1) # wait for camera to focus
 
-    ## Capture image and stop
-    IMG_NAME = NOW.strftime("autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
-    metadata = picam2.capture_metadata()
-    picam2.capture_file(IMG_NAME)
-    cur_img = picam2.switch_mode_and_capture_array(IMG_NAME)
+            ## Capture image and stop
+            IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
+            camera.capture(IMG_NAME)
+            camera.stop_preview()
 
     print("Picture Acquired!")
     print()
