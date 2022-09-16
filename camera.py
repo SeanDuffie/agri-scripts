@@ -93,21 +93,22 @@ except:
     pass
 
 # Read data history
-data = {
-    "TIME": list(),
-    "LIGHT": [],
-    "SOIL": [],
-    "TEMPC": [],
-    "TEMPF": [],
-    "HUMID": []
-}
-print("Loading current file...")
 if (exists(OUTDAT + "dat.json")):
+    print("Loading current file...")
     f = open(OUTDAT + "dat.json")
     data = json.load(f)
     f.close()
-print("Appending New Data..")
+else:
+    data = {
+        "TIME": list(),
+        "LIGHT": [],
+        "SOIL": [],
+        "TEMPC": [],
+        "TEMPF": [],
+        "HUMID": []
+    }
 # Process and Store the new data
+print("Appending New Data..")
 data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
 data["LIGHT"].append(float(SENSOR_ARR[0]))
 data["SOIL"].append(float(SENSOR_ARR[1]))
@@ -137,9 +138,7 @@ if int(H) >= 7 or int(H) == 0 or True:
 
     ## If 64 bit system
     picam2 = Picamera2()
-
     capture_config = picam2.create_still_configuration(main={"size": (3280, 1845), "format": "RGB888"})
-
     picam2.start(config=capture_config, show_preview=False)
     sleep(1) # wait for camera to focus
 
