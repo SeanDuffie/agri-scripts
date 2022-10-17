@@ -14,8 +14,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 import post_webhook
-import acq_dat
-import acq_img
+import agdata
+import image
 
 ### Start Initial Setup ###
 # Versions
@@ -24,11 +24,10 @@ print("OS: ", os.uname()[0], os.uname()[2])
 print("Architecture: ", os.uname()[4])
 print()
 
-
 # Acquire initial data
 NOW = datetime.now()
 H = NOW.strftime("%H")
-NAME = NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss")
+NAME = NOW.strftime("%Y-%m-%d_%Hh")
 print("Current time: ", NOW)
 print()
 
@@ -36,12 +35,12 @@ RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
 
-IMG_NAME = "{0}{1}.jpg".format(IMGDIR, NAME)
-VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
-FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
-FPS = 15                                        # video fps
-RAW_SIZE = (3280, 2465)                         # camera resolution
-IMG_SIZE = (1920, 1080)                         # video resolution
+IMG_NAME = f"{IMGDIR}{NAME}.jpg"            # image name
+VID_NAME = f"{RTDIR}/time-lapse.mp4"        # video name
+FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
+FPS = 15                                    # video fps
+RAW_SIZE = (3280, 2465)                     # camera resolution
+IMG_SIZE = (1920, 1080)                     # video resolution
 
 print("Root: ", RTDIR)
 print("Data Dir: ", OUTDAT)
@@ -49,25 +48,36 @@ print("Output Image: ", IMG_NAME)
 print("Output Video: ", VID_NAME)
 print()
 
-
-
-if int(H) == 7:
-    URL = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
-    post_webhook(URL)
+fields = []
+rows = []
+URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
+URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
 #### End Initial Setup ####
 
 
 ### Start Acquire Sensor Measurements ###
-data = acq_dat(NAME, OUTDAT)
-json_object = json.dumps(data, indent=4)
-with open(OUTDAT + "dat.json", "w", encoding="utf-8") as f:
-    f.write(json_object)
+fields, rows = agdata.acq_data(NAME, OUTDAT)
+rows.append(agdata.acq_sensors())
+# # JSON output
+# with open(OUTDAT + "dat.json", "w", encoding="utf-8") as f:
+#     json_object = json.dumps(data, indent=4)
+#     f.write(json_object)
+# CSV output
+with open(OUTDAT + "dat.csv", "w", encoding="utf-8") as f:
+    csvwriter = csv.writer(f)
+    csvwriter.writerow(fields)
+    csvwriter.writerows(rows)
 #### End Acquire Sensor Measurements ####
 
 
 ### Start Acquire Image ###
-cur_img = acq_img(IMG_NAME, H,RAW_SIZE,IMG_SIZE)
-cv2.imwrite(IMG_NAME, cur_img)
+# If during inactive hours, do nothing
+post_webhook.post_webhook(URL_ON)                           # Turn on Lamp
+cur_img = image.acq_img(IMG_NAME, H,RAW_SIZE,IMG_SIZE)      # Capture Image
+cur_img = image.proc_img(img=cur_img, name=NAME)            # Process Image
+cv2.imwrite(IMG_NAME, cur_img)                              # Save Image
+if int(H) < 7 and int(H) != 0:
+    post_webhook(URL_OFF)                                   # Turn off Lamp if Night
 #### End Acquire Image ####
 
 
@@ -136,9 +146,4 @@ if int(H) == 0:
         OUT.write(img)              # writes out each frame to the video file
     OUT.release()
     print("Time-Lapse Released!\n")
-
-    ## Turn off Lamp
-    URL = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
-    post_webhook(URL)
-    print("Goodnight!")
 #### End Post Processing Video Compilation ####

@@ -6,7 +6,9 @@ from typing import Any
 import serial
 from serial.tools import list_ports
 
-def acq_data(name: str, outdat: str) -> list(list(Any)):
+# struct data (headers/rows/cols)
+
+def acq_sensors() -> list():
     """
     Temp Docstring
     """
@@ -42,10 +44,17 @@ def acq_data(name: str, outdat: str) -> list(list(Any)):
         SENSOR_ARR = SENSOR_READ.split(",")
         print(SENSOR_ARR)
         print()
+        return SENSOR_ARR
     except:
         print("Something went wrong with decoding!")
         pass
 
+def acq_data(name: str, outdat: str) -> list(list(Any)):
+    """
+    Temp Docstring
+    """
+    fields = []
+    rows = [[]]
     # Read data history
     if (exists(outdat + "dat.json")):
         print("Loading current file...")
@@ -55,14 +64,9 @@ def acq_data(name: str, outdat: str) -> list(list(Any)):
     elif (exists(outdat + "dat.csv")):
         # reading csv file
         with open(outdat + "dat.csv", 'r', encoding="utf-8") as csvfile:
-            # creating a csv reader object
-            csvreader = csv.reader(csvfile)
-            
-            # extracting field names through first row
-            fields = next(csvreader)
-        
-            # extracting each data row one by one
-            for row in csvreader:
+            csvreader = csv.reader(csvfile)     # creating a csv reader object
+            fields = next(csvreader)            # First row of headers
+            for row in csvreader:               # extracting each data row
                 rows.append(row)
         
             # get total number of rows
@@ -85,4 +89,4 @@ def acq_data(name: str, outdat: str) -> list(list(Any)):
     data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
     data["HUMID"].append(float(SENSOR_ARR[3]))
 
-    return data
+    return [fields, rows]
