@@ -5,7 +5,6 @@ Docstring for camera.py.
 
 from datetime import datetime
 import os
-import struct
 import json
 import cv2
 import requests
@@ -13,7 +12,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-import post_webhook
+import webhook
 import agdata
 import image
 
@@ -72,12 +71,12 @@ with open(OUTDAT + "dat.csv", "w", encoding="utf-8") as f:
 
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
-post_webhook.post_webhook(URL_ON)                           # Turn on Lamp
+webhook.post_webhook(URL_ON)                           # Turn on Lamp
 cur_img = image.acq_img(IMG_NAME, H,RAW_SIZE,IMG_SIZE)      # Capture Image
 cur_img = image.proc_img(img=cur_img, name=NAME)            # Process Image
 cv2.imwrite(IMG_NAME, cur_img)                              # Save Image
-if int(H) < 7 and int(H) != 0:
-    post_webhook(URL_OFF)                                   # Turn off Lamp if Night
+if int(H) < 7 and int(H) != 0 or int(H) > 19:
+    webhook.post_webhook(URL_OFF)                                   # Turn off Lamp if Night
 #### End Acquire Image ####
 
 

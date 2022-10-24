@@ -2,6 +2,7 @@ from os.path import exists
 from time import sleep
 import csv
 import json
+import pandas as pd
 from typing import Any
 import serial
 from serial.tools import list_ports
@@ -49,7 +50,7 @@ def acq_sensors() -> list():
         print("Something went wrong with decoding!")
         pass
 
-def acq_data(name: str, outdat: str) -> list(list(Any)):
+def acq_data(outdat: str) -> pd.DataFrame:
     """
     Temp Docstring
     """
@@ -81,12 +82,14 @@ def acq_data(name: str, outdat: str) -> list(list(Any)):
             "HUMID": []
         }
     # Process and Store the new data
-    print("Appending New Data..")
-    data["TIME"].append(name)
-    data["LIGHT"].append(float(SENSOR_ARR[0]))
-    data["SOIL"].append(float(SENSOR_ARR[1]))
-    data["TEMPC"].append(float(SENSOR_ARR[2]))
-    data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
-    data["HUMID"].append(float(SENSOR_ARR[3]))
+    # print("Appending New Data..")
+    # data["TIME"].append(name)
+    # data["LIGHT"].append(float(SENSOR_ARR[0]))
+    # data["SOIL"].append(float(SENSOR_ARR[1]))
+    # data["TEMPC"].append(float(SENSOR_ARR[2]))
+    # data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
+    # data["HUMID"].append(float(SENSOR_ARR[3]))
 
     return [fields, rows]
+
+# def app_dat(SENSOR_ARR: list(), )

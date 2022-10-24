@@ -1,6 +1,7 @@
 picamera
 opencv-python
 numpy
+pandas
 pyserial
 
 # sudo apt install -y python3-libcamera
