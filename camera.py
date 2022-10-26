@@ -47,25 +47,28 @@ print("Output Image: ", IMG_NAME)
 print("Output Video: ", VID_NAME)
 print()
 
-fields = []
-rows = []
+# fields = []
+# rows = []
 URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
 URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
 #### End Initial Setup ####
 
 
 ### Start Acquire Sensor Measurements ###
-fields, rows = agdata.acq_data(NAME, OUTDAT)
-rows.append(agdata.acq_sensors())
+data = agdata.acq_data(OUTDAT)
+new_dat = agdata.acq_sensors()
+data = pd.concat([data, pd.DataFrame([new_dat], columns=new_dat.index)]).reset_index(drop=True)
+# fields, rows = agdata.acq_data(NAME, OUTDAT)
+# rows.append(agdata.acq_sensors())
 # # JSON output
 # with open(OUTDAT + "dat.json", "w", encoding="utf-8") as f:
 #     json_object = json.dumps(data, indent=4)
 #     f.write(json_object)
 # CSV output
-with open(OUTDAT + "dat.csv", "w", encoding="utf-8") as f:
-    csvwriter = csv.writer(f)
-    csvwriter.writerow(fields)
-    csvwriter.writerows(rows)
+# with open(OUTDAT + "dat.csv", "w", encoding="utf-8") as f:
+#     csvwriter = csv.writer(f)
+#     csvwriter.writerow(fields)
+#     csvwriter.writerows(rows)
 #### End Acquire Sensor Measurements ####
 
 
@@ -93,7 +96,7 @@ if int(H) == 0:
     print(hrs)
 
     # Plot Total Light
-    plt.plot(iter, data["LIGHT"])
+    plt.plot(iter, data["Light Intensity"])
     plt.xlabel("Time (Hours)")
     plt.ylabel("Light Exposure")
     plt.savefig("data/Light_Exposure.png")
@@ -102,7 +105,7 @@ if int(H) == 0:
     # Plot average light per hour
 
     # Plot Total Soil Moisture
-    plt.plot(iter, data["SOIL"])
+    plt.plot(iter, data["Soil Moisture"])
     plt.xlabel("Time (Hours)")
     plt.ylabel("Soil Moisture")
     plt.savefig("data/Soil_Moisture.png")
@@ -111,7 +114,7 @@ if int(H) == 0:
     # Plot average moisture per hour
 
     # Plot Total Soil Moisture
-    plt.plot(iter, data["TEMPF"])
+    plt.plot(iter, data["Temperature"])
     plt.xlabel("Time (Hours)")
     plt.ylabel("Temperature in F")
     plt.savefig("data/TempF.png")
@@ -120,7 +123,7 @@ if int(H) == 0:
     # Plot average temperature per hour
 
     # Plot Total Soil Moisture
-    plt.plot(iter, data["HUMID"])
+    plt.plot(iter, data["Humidity"])
     plt.xlabel("Time (Hours)")
     plt.ylabel("Air Humidity (Percentage)")
     plt.savefig("data/Humidity.png")

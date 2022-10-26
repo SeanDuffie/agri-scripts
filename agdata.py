@@ -50,7 +50,7 @@ def acq_sensors() -> list():
         print("Something went wrong with decoding!")
         pass
 
-def acq_data(outdat: str) -> pd.DataFrame:
+def acq_data(outdat: str):# -> pd.DataFrame:
     """
     Temp Docstring
     """
@@ -60,20 +60,23 @@ def acq_data(outdat: str) -> pd.DataFrame:
     if (exists(outdat + "dat.json")):
         print("Loading current file...")
         f = open(outdat + "dat.json", encoding="utf-8")
-        data = json.load(f)
+        df = json.load(f)
         f.close()
     elif (exists(outdat + "dat.csv")):
         # reading csv file
-        with open(outdat + "dat.csv", 'r', encoding="utf-8") as csvfile:
-            csvreader = csv.reader(csvfile)     # creating a csv reader object
-            fields = next(csvreader)            # First row of headers
-            for row in csvreader:               # extracting each data row
-                rows.append(row)
+        # TODO: Add timing and test different methods (pyarrow?)
+        # with open(outdat + "dat.csv", 'r', encoding="utf-8") as csvfile:
+        #     csvreader = csv.reader(csvfile)     # creating a csv reader object
+        #     fields = next(csvreader)            # First row of headers
+        #     for row in csvreader:               # extracting each data row
+        #         rows.append(row)
         
-            # get total number of rows
-            print("Total no. of rows: %d"%(csvreader.line_num))
+        #     # get total number of rows
+        #     print("Total no. of rows: %d"%(csvreader.line_num))
+
+        df = pd.read_csv(outdat + 'dat.csv')
     else:
-        data = {
+        df = {
             "TIME": list(),
             "LIGHT": [],
             "SOIL": [],
@@ -90,6 +93,7 @@ def acq_data(outdat: str) -> pd.DataFrame:
     # data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
     # data["HUMID"].append(float(SENSOR_ARR[3]))
 
-    return [fields, rows]
+    # return [fields, rows]
+    return df
 
 # def app_dat(SENSOR_ARR: list(), )
