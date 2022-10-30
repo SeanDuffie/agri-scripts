@@ -187,7 +187,6 @@ if int(H) == 0:
         cnt += 1
         iter.append(cnt)
         hrs.append(int(stamp[11:13]))
-    print(hrs)
 
     # Plot Total Light
     plt.plot(iter, data["LIGHT"])
