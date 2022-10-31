@@ -58,5 +58,8 @@ def proc_img(img:NDArray[uint8], name:NDArray[uint8]):
     # Parallel Humidity level Indicator [GREEN]
     # Parallel Temperature Indicator [RED]
 
+    # Add info panel
+        # Number of days since last watering
+
     #### End Post Processing Current Image ####
     return img
