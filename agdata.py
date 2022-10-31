@@ -3,9 +3,11 @@ from time import sleep
 import csv
 import json
 import pandas as pd
-from typing import Any
+from typing import Any, Union, List
 import serial
 from serial.tools import list_ports
+
+Num = Union[int, float]
 
 # struct data (headers/rows/cols)
 
@@ -48,52 +50,70 @@ def acq_sensors() -> list():
         return SENSOR_ARR
     except:
         print("Something went wrong with decoding!")
-        pass
 
-def acq_data(outdat: str):# -> pd.DataFrame:
+def acq_data(OUTDAT: str) -> pd.DataFrame:
     """
     Temp Docstring
     """
-    fields = []
-    rows = [[]]
+    # TODO: Add timing and test different methods (pyarrow?)
+
     # Read data history
-    if (exists(outdat + "dat.json")):
+    if (exists(OUTDAT + "dat.csv")):
         print("Loading current file...")
-        f = open(outdat + "dat.json", encoding="utf-8")
+        df = pd.read_csv(OUTDAT + 'dat.csv')
+    elif (exists(OUTDAT + "dat.json")):
+        print("Loading current file...")
+        f = open(OUTDAT + "dat.json", encoding="utf-8")
         df = json.load(f)
         f.close()
-    elif (exists(outdat + "dat.csv")):
-        # reading csv file
-        # TODO: Add timing and test different methods (pyarrow?)
-        # with open(outdat + "dat.csv", 'r', encoding="utf-8") as csvfile:
-        #     csvreader = csv.reader(csvfile)     # creating a csv reader object
-        #     fields = next(csvreader)            # First row of headers
-        #     for row in csvreader:               # extracting each data row
-        #         rows.append(row)
-        
-        #     # get total number of rows
-        #     print("Total no. of rows: %d"%(csvreader.line_num))
-
-        df = pd.read_csv(outdat + 'dat.csv')
     else:
-        df = {
-            "TIME": list(),
-            "LIGHT": [],
-            "SOIL": [],
-            "TEMPC": [],
-            "TEMPF": [],
-            "HUMID": []
+        lst = {
+            'Iteration': [],
+            'Name': [],
+            'Month': [],
+            'Day': [],
+            'Hour': [],
+            'Soil Moisture': [],
+            'Avg SM': [],
+            'Temperature': [],
+            'Avg T': [],
+            'Humidity': [],
+            'Avg H': [],
+            'Light Intensity': [],
+            'Avg L': [],
+            'Watered?': [],
+            'Amount Watered': [],
+            'Days without water': []
         }
-    # Process and Store the new data
-    # print("Appending New Data..")
-    # data["TIME"].append(name)
-    # data["LIGHT"].append(float(SENSOR_ARR[0]))
-    # data["SOIL"].append(float(SENSOR_ARR[1]))
-    # data["TEMPC"].append(float(SENSOR_ARR[2]))
-    # data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
-    # data["HUMID"].append(float(SENSOR_ARR[3]))
+        df = pd.DataFrame(lst)
 
-    # return [fields, rows]
     return df
 
-# def app_dat(SENSOR_ARR: list(), )
+def app_dat(img_name: str, m: int, d: int, h: int, df: pd.DataFrame, SENSOR_ARR) -> pd.DataFrame:
+    """
+    Temp Docstring
+    """
+
+    # Process and Store the new data
+    print("Appending New Data..")
+    new_row = {
+        1,
+        img_name,
+        m,
+        d,
+        h,
+        SENSOR_ARR[0],
+        df['Soil Moisture'].mean(),
+        SENSOR_ARR[1],
+        df['Temperature'].mean(),
+        SENSOR_ARR[2],
+        df['Humidity'].mean(),
+        SENSOR_ARR[3],
+        df['Light Intensity'].mean(),
+        0,
+        0,
+        1
+    }
+    df.append_row(new_row)
+
+    return df
