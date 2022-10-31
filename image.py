@@ -52,5 +52,11 @@ def proc_img(img:NDArray[uint8], name:NDArray[uint8]):
 
     # TODO: Append Sensor data somehow
 
+    # Add Day/Night Indicator
+
+    # Add Water Level 'Battery' Indicator [BLUE]
+    # Parallel Humidity level Indicator [GREEN]
+    # Parallel Temperature Indicator [RED]
+
     #### End Post Processing Current Image ####
     return img
