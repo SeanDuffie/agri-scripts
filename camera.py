@@ -5,11 +5,10 @@ Docstring for camera.py.
 
 from datetime import datetime
 import os
-import json
+import sys
 import cv2
-import requests
 import numpy as np
-import matplotlib
+# import matplotlib
 import matplotlib.pyplot as plt
 
 import webhook
@@ -19,8 +18,10 @@ import image
 ### Start Initial Setup ###
 # Versions
 print("Version Diagnostics:")
-print("OS: ", os.uname()[0], os.uname()[2])
-print("Architecture: ", os.uname()[4])
+print("OS type: ", os.name)
+print("Platform: ", sys.platform)
+# print("OS: ", os.uname()[0], os.uname()[2])
+# print("Architecture: ", os.uname()[4])
 print()
 
 # Acquire initial data
@@ -30,6 +31,7 @@ NAME = NOW.strftime("%Y-%m-%d_%Hh")
 print("Current time: ", NOW)
 print()
 
+# TODO: If autocaps or data don't exist, create them! They are gitignored...
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
@@ -56,8 +58,8 @@ URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKO
 
 ### Start Acquire Sensor Measurements ###
 data = agdata.acq_data(OUTDAT)
-new_dat = agdata.acq_sensors()
-data = pd.concat([data, pd.DataFrame([new_dat], columns=new_dat.index)]).reset_index(drop=True)
+# new_dat = agdata.acq_sensors()
+# data = pd.concat([data, pd.DataFrame([new_dat], columns=new_dat.index)]).reset_index(drop=True)
 # fields, rows = agdata.acq_data(NAME, OUTDAT)
 # rows.append(agdata.acq_sensors())
 # # JSON output
@@ -75,7 +77,7 @@ data = pd.concat([data, pd.DataFrame([new_dat], columns=new_dat.index)]).reset_i
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
 webhook.post_webhook(URL_ON)                           # Turn on Lamp
-cur_img = image.acq_img(IMG_NAME, H,RAW_SIZE,IMG_SIZE)      # Capture Image
+cur_img = image.acq_img(IMG_NAME,RAW_SIZE,IMG_SIZE)      # Capture Image
 cur_img = image.proc_img(img=cur_img, name=NAME)            # Process Image
 cv2.imwrite(IMG_NAME, cur_img)                              # Save Image
 if int(H) < 7 and int(H) != 0 or int(H) > 19:
@@ -85,53 +87,55 @@ if int(H) < 7 and int(H) != 0 or int(H) > 19:
 
 ### Start Post Processing Video Compilation ###
 if int(H) == 0:
+    print("MIDNIGHT")
+if True:
     ## Start Generate Plots ##
-    cnt = 0
-    iter = []
-    hrs = []
-    for stamp in data["TIME"]:
-        cnt += 1
-        iter.append(cnt)
-        hrs.append(int(stamp[11:13]))
-    print(hrs)
+    # cnt = 0
+    # iter = []
+    # hrs = []
+    # for stamp in data["TIME"]:
+    #     cnt += 1
+    #     iter.append(cnt)
+    #     hrs.append(int(stamp[11:13]))
+    # print(hrs)
 
-    # Plot Total Light
-    plt.plot(iter, data["Light Intensity"])
-    plt.xlabel("Time (Hours)")
-    plt.ylabel("Light Exposure")
-    plt.savefig("data/Light_Exposure.png")
-    plt.close()
+    # # Plot Total Light
+    # plt.plot(iter, data["Light Intensity"])
+    # plt.xlabel("Time (Hours)")
+    # plt.ylabel("Light Exposure")
+    # plt.savefig("data/Light_Exposure.png")
+    # plt.close()
 
-    # Plot average light per hour
+    # # Plot average light per hour
 
-    # Plot Total Soil Moisture
-    plt.plot(iter, data["Soil Moisture"])
-    plt.xlabel("Time (Hours)")
-    plt.ylabel("Soil Moisture")
-    plt.savefig("data/Soil_Moisture.png")
-    plt.close()
+    # # Plot Total Soil Moisture
+    # plt.plot(iter, data["Soil Moisture"])
+    # plt.xlabel("Time (Hours)")
+    # plt.ylabel("Soil Moisture")
+    # plt.savefig("data/Soil_Moisture.png")
+    # plt.close()
 
-    # Plot average moisture per hour
+    # # Plot average moisture per hour
 
-    # Plot Total Soil Moisture
-    plt.plot(iter, data["Temperature"])
-    plt.xlabel("Time (Hours)")
-    plt.ylabel("Temperature in F")
-    plt.savefig("data/TempF.png")
-    plt.close()
+    # # Plot Total Soil Moisture
+    # plt.plot(iter, data["Temperature"])
+    # plt.xlabel("Time (Hours)")
+    # plt.ylabel("Temperature in F")
+    # plt.savefig("data/TempF.png")
+    # plt.close()
     
-    # Plot average temperature per hour
+    # # Plot average temperature per hour
 
-    # Plot Total Soil Moisture
-    plt.plot(iter, data["Humidity"])
-    plt.xlabel("Time (Hours)")
-    plt.ylabel("Air Humidity (Percentage)")
-    plt.savefig("data/Humidity.png")
-    plt.close()
+    # # Plot Total Soil Moisture
+    # plt.plot(iter, data["Humidity"])
+    # plt.xlabel("Time (Hours)")
+    # plt.ylabel("Air Humidity (Percentage)")
+    # plt.savefig("data/Humidity.png")
+    # plt.close()
     
-    # Plot average humidity per hour
+    # # Plot average humidity per hour
 
-    ### End Generate Plots ###
+    ## End Generate Plots ##
 
 
     IMG_ARR = []

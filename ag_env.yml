@@ -1,3 +1,19 @@
+# to create a new environment:
+#     $ conda env create --file <filename.yaml>
+#
+# to update an existing environment
+#     $ conda env update --file <filename.yaml>
+#
+# to activate the environment
+#     $ conda activate <environment name>
+#
+# to list installed packages as a sequnce of revisions through time
+#     $ conda list -r
+#
+# if you use mamba, do this instead:
+#     $ mamba create --name <environment name>
+#     $ mamba env update --name <environment name> --file <filename.yaml>
+
 name: ag_env
 channels:
   - conda-forge
