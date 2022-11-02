@@ -31,10 +31,16 @@ NAME = NOW.strftime("%Y-%m-%d_%Hh")
 print("Current time: ", NOW)
 print()
 
-# TODO: If autocaps or data don't exist, create them! They are gitignored...
+# Define Path names
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
+
+# If autocaps or data don't exist, create them! They are gitignored...
+if not os.path.exists(IMGDIR):
+    os.makedirs(IMGDIR)
+if not os.path.exists(OUTDAT):
+    os.makedirs(OUTDAT)
 
 IMG_NAME = f"{IMGDIR}{NAME}.jpg"            # image name
 VID_NAME = f"{RTDIR}/time-lapse.mp4"        # video name
