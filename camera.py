@@ -31,6 +31,7 @@ NAME = NOW.strftime("%Y-%m-%d_%Hh")
 print("Current time: ", NOW)
 print()
 
+# TODO: If autocaps or data don't exist, create them! They are gitignored...
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
