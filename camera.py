@@ -4,192 +4,159 @@ Docstring for camera.py.
 """
 
 from datetime import datetime
-from time import sleep
 import os
-from os.path import exists
-import struct
+import sys
 import cv2
-import json
-import requests
-# import numpy
-import serial
-from serial.tools import list_ports
-if os.name.find("64"):
-    from picamera2 import Picamera2, Preview        # For 64-bit OS
-else:
-    from picamera import PiCamera                   # For 32-bit OS
+import numpy as np
+# import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
 
+import webhook
+import agdata
+import image
 
 ### Start Initial Setup ###
 # Versions
 print("Version Diagnostics:")
+print("OS type: ", os.name)
+print("Platform: ", sys.platform)
 print("OS: ", os.uname()[0], os.uname()[2])
 print("Architecture: ", os.uname()[4])
 print()
 
-
 # Acquire initial data
-RTDIR = os.getcwd()
-IMGDIR = RTDIR + "/autocaps/"
-OUTDAT = RTDIR + "/data/"
-print("Root: ", RTDIR)
-print("Image Dir: ", IMGDIR)
-print("Data Dir: ", OUTDAT)
-print("Output Video: ", RTDIR + "/time-lapse.mp4")
-print()
-
-VID_NAME = '{0}/time-lapse.mp4'.format(RTDIR)   # video name
-FOURCC = cv2.VideoWriter_fourcc(*'mp4v')        # video format
-FPS = 60                                        # video fps
-IMG_SIZE = (1920, 1080)
-
 NOW = datetime.now()
+M = NOW.strftime("%m")
+D = NOW.strftime("%d")
 H = NOW.strftime("%H")
+NAME = NOW.strftime("%Y-%m-%d_%H:00")
 print("Current time: ", NOW)
 print()
 
+# Define Path names
+RTDIR = os.getcwd()
+IMGDIR = RTDIR + "/autocaps/"
+OUTDAT = RTDIR + "/data/"
 
-if int(H) == 7:
-    webhook_url = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
-    data = { 'name': 'This is an example for webhook' }
-    # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'}) #leaving this in in case I decide to use json configurations later
-    requests.post(webhook_url)
+# If autocaps or data don't exist, create them! They are gitignored...
+if not os.path.exists(IMGDIR):
+    os.makedirs(IMGDIR)
+if not os.path.exists(OUTDAT):
+    os.makedirs(OUTDAT)
+
+IMG_NAME = f"{IMGDIR}{NAME}.jpg"            # image name
+VID_NAME = f"{RTDIR}/time-lapse.mp4"        # video name
+FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
+FPS = 15                                    # video fps
+RAW_SIZE = (3280, 2465)                     # camera resolution
+IMG_SIZE = (1920, 1080)                     # video resolution
+
+print("Root: ", RTDIR)
+print("Data Dir: ", OUTDAT)
+print("Output Image: ", IMG_NAME)
+print("Output Video: ", VID_NAME)
+print()
+
+URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
+URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
 #### End Initial Setup ####
 
 
-
-
-
 ### Start Acquire Sensor Measurements ###
-## Identifying ports...
-# print("Identifying current ports... ")
-PORT_LIST = list(list_ports.comports())
-# for p in PORT_LIST:
-#     print("  - ", p.device)
-# print()
-
-# Setting up Serial connection
-ser = serial.Serial(
-    # port='/dev/ttyACM0', # use this to manually specify port
-    port=PORT_LIST[0].device,
-    baudrate=115200,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE,
-    bytesize=serial.EIGHTBITS,
-    timeout=10
-)
-
-# Send out requests until a response is received
-while ser.in_waiting == 0:
-    print("Waiting for sensors...")
-    ser.write('1'.encode('utf-8'))
-    sleep(.5)
+data = agdata.acq_data(OUTDAT)
+new_dat = agdata.acq_sensors()
+it = len(data["Name"])
+# TODO: Add code to process watering
+data = agdata.app_dat(NAME,it,M,D,H,0,data,new_dat)
+# CSV output
+# Pandas Method
+data.to_csv(path_or_buf=OUTDAT+"dat.csv",header=True,index=False)
+print(data)
 print()
-
-# Receive the Response from the sensors
-SENSOR_ARR = list()
-try:
-    print("Reading Response...")
-    FEEDBACK = ser.readline()
-    SENSOR_READ = FEEDBACK.decode("Ascii")
-    SENSOR_ARR = SENSOR_READ.split(",")
-    print(SENSOR_ARR)
-    print()
-except:
-    print("Something went wrong with decoding!")
-    pass
-
-# Read data history
-if (exists(OUTDAT + "dat.json")):
-    print("Loading current file...")
-    f = open(OUTDAT + "dat.json")
-    data = json.load(f)
-    f.close()
-else:
-    data = {
-        "TIME": list(),
-        "LIGHT": [],
-        "SOIL": [],
-        "TEMPC": [],
-        "TEMPF": [],
-        "HUMID": []
-    }
-# Process and Store the new data
-print("Appending New Data..")
-data["TIME"].append(NOW.strftime("%Y-%m-%d_%Hh%Mm%Ss"))
-data["LIGHT"].append(float(SENSOR_ARR[0]))
-data["SOIL"].append(float(SENSOR_ARR[1]))
-data["TEMPC"].append(float(SENSOR_ARR[2]))
-data["TEMPF"].append(float(SENSOR_ARR[2])*(9/5)+32)
-data["HUMID"].append(float(SENSOR_ARR[3]))
-
-json_object = json.dumps(data, indent=4)
-# print(json.dumps(data, indent=-1))
-with open(OUTDAT + "dat.json", "w") as f:
-    f.write(json_object)
+# Manual Method
+# with open(OUTDAT + "dat.csv", "w", encoding="utf-8") as f:
+#     csvwriter = csv.writer(f)
+#     csvwriter.writerow(fields)
+#     csvwriter.writerows(rows)
 #### End Acquire Sensor Measurements ####
 
 
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
-if int(H) >= 7 or int(H) == 0 or True:
-    print("Starting Camera...")
-    if os.name.find("64"):
-        ## If 64 bit system
-        picam2 = Picamera2()
-        capture_config = picam2.create_still_configuration(main={"size": (3280, 1845), "format": "RGB888"})
-        picam2.start(config=capture_config, show_preview=False)
-        sleep(1) # wait for camera to focus
-
-        ## Capture image and stop
-        IMG_NAME = NOW.strftime("autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
-        metadata = picam2.capture_metadata()
-        picam2.capture_file(IMG_NAME)
-        cur_img = picam2.switch_mode_and_capture_array(IMG_NAME)
-    else:
-        ## If 32 bit system
-        with PiCamera() as camera:
-            camera.start_preview()
-            sleep(1) # wait for camera to focus
-
-            ## Capture image and stop
-            IMG_NAME = NOW.strftime("{0}/autocaps/%Y-%m-%d_%Hh%Mm%Ss.jpg".format(RTDIR))
-            camera.capture(IMG_NAME)
-            camera.stop_preview()
-
-    print("Picture Acquired!")
-    print()
-else:
-    print("Inactive hours")
+webhook.post_webhook(URL_ON)                            # Turn on Lamp
+cur_img = image.acq_img(IMG_NAME,RAW_SIZE,IMG_SIZE)     # Capture Image
+cur_img = image.proc_img(img=cur_img, name=NAME)        # Process Image
+cv2.imwrite(IMG_NAME, cur_img)                          # Save Image
+if int(H) < 7 or int(H) > 19:
+    webhook.post_webhook(URL_OFF)                                   # Turn off Lamp if Night
 #### End Acquire Image ####
-
-
-### Start Post Processing Current Image ###
-#     # TODO: Add Timestamp
-
-#     # TODO: Append Sensor data somehow
-
-#### End Post Processing Current Image ####
 
 
 ### Start Post Processing Video Compilation ###
 if int(H) == 0:
-    # IMG_ARR = []
-    # # Read in current directory of images
-    # print("Reading in Images...")
-    # images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg")]
-    # images.sort()
-    # # Compile image array into a video FIXME: This is a broken video
-    # print("Apply Modifications and compile video")
-    # OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
-    # for filename in images:
-    #     img = cv2.imread(IMGDIR + filename)  # Read in Raw image
-    #     IMG_ARR.append(img)         # Add image to array
-    #     OUT.write(img)              # writes out each frame to the video file
-    # OUT.release()
-    # print("Released!")
-    webhook_url = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
-    data = { 'name': 'This is an example for webhook' }
-    # requests.post(webhook_url, data=json.dumps(data), headers={'Content-Type': 'application/json'})
-    requests.post(webhook_url)
+    print("MIDNIGHT")
+if True:
+    ## Start Generate Plots ###
+    cnt = 0
+    iter = []
+    hrs = []
+    for stamp in data["Name"]:
+        cnt += 1
+        iter.append(cnt)
+        hrs.append(int(stamp[11:13]))
+
+    # Plot Total Light
+    plt.plot(iter, data["Light Intensity"])
+    plt.xlabel("Time (Hours)")
+    plt.ylabel("Light Exposure")
+    plt.savefig("data/Light_Exposure.png")
+    plt.close()
+
+    # Plot average light per hour
+
+    # Plot Total Soil Moisture
+    plt.plot(iter, data["Soil Moisture"])
+    plt.xlabel("Time (Hours)")
+    plt.ylabel("Soil Moisture")
+    plt.savefig("data/Soil_Moisture.png")
+    plt.close()
+
+    # Plot average moisture per hour
+
+    # Plot Total Soil Moisture
+    plt.plot(iter, data["Temperature"])
+    plt.xlabel("Time (Hours)")
+    plt.ylabel("Temperature in F")
+    plt.savefig("data/TempF.png")
+    plt.close()
+    
+    # Plot average temperature per hour
+
+    # Plot Total Soil Moisture
+    plt.plot(iter, data["Humidity"])
+    plt.xlabel("Time (Hours)")
+    plt.ylabel("Air Humidity (Percentage)")
+    plt.savefig("data/Humidity.png")
+    plt.close()
+    
+    # Plot average humidity per hour
+
+    ## End Generate Plots ##
+
+
+    IMG_ARR = []
+    # Read in current directory of images
+    print("Reading in Images...")
+    images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg") and img.find("_02h")]
+    images.sort()
+    # Compile image array into a video
+    print("Compiling video...")
+    OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
+    for filename in images:
+        img = cv2.imread(IMGDIR + filename)  # Read in Raw image
+        IMG_ARR.append(img)         # Add image to array
+        OUT.write(img)              # writes out each frame to the video file
+    OUT.release()
+    print("Time-Lapse Released!\n")
 #### End Post Processing Video Compilation ####
