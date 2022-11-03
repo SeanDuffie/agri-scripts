@@ -10,9 +10,13 @@ from numpy import uint8
 from numpy.typing import NDArray
 if sys.platform.startswith("linux"):
     if sys.platform.find("64"):
+        print("64-bit System - Using Picamera2...")
         from picamera2 import Picamera2, Preview        # For 64-bit OS
     else:
+        print("32-bit System - Using Picamera...")
         from picamera import PiCamera                   # For 32-bit OS
+else:
+    print("Not Linux - Ignoring Picamera...")
 
 def acq_img(img_name:str, raw_size, img_size):
     """
@@ -20,7 +24,7 @@ def acq_img(img_name:str, raw_size, img_size):
     """
     cur_img = np.zeros([img_size[1], img_size[0], 3], dtype = np.uint8)
     cur_img[:,:] = [255, 255, 255]
-    print("Starting Camera...\n")
+    print("Starting Camera...")
     if sys.platform.find("win") == -1:
         if os.name.find("64"):
             ## If 64 bit system
@@ -88,10 +92,7 @@ def draw_text(img,
     Temp Docstring
     """
     x,y = pos
-    print(x,y)
-    dim,_ = cv2.getTextSize(text, font, font_scale, font_thickness)
-    w,h = dim
-    print(w,h)
+    (w,h),_ = cv2.getTextSize(text, font, font_scale, font_thickness)
     cv2.rectangle(img,
                 (x-5, y-5),
                 (x+w+10, y+h+10),

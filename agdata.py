@@ -67,53 +67,59 @@ def acq_data(OUTDAT: str) -> pd.DataFrame:
         df = json.load(f)
         f.close()
     else:
-        lst = {
-            'Iteration': [],
-            'Name': [],
-            'Month': [],
-            'Day': [],
-            'Hour': [],
-            'Soil Moisture': [],
-            'Avg SM': [],
-            'Temperature': [],
-            'Avg T': [],
-            'Humidity': [],
-            'Avg H': [],
-            'Light Intensity': [],
-            'Avg L': [],
-            'Watered?': [],
-            'Amount Watered': [],
-            'Days without water': []
-        }
-        df = pd.DataFrame(lst)
+        df = pd.DataFrame(columns = [
+                'Name',
+                'Month',
+                'Day',
+                'Hour',
+                'Light Intensity',
+                'Avg L',
+                'Soil Moisture',
+                'Avg SM',
+                'Temperature',
+                'Avg T',
+                'Humidity',
+                'Avg H',
+                'Watered?',
+                'Amount Watered',
+                'Days without water'
+            ]
+        )
 
     return df
 
-def app_dat(img_name: str, m: int, d: int, h: int, df: pd.DataFrame, SENSOR_ARR) -> pd.DataFrame:
+def app_dat(img_name: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
     """
     Temp Docstring
     """
 
     # Process and Store the new data
     print("Appending New Data..")
-    new_row = {
-        1,
+    day_wat = 0
+    amt_wat = 0
+    if w:
+        amt_wat += 1
+    if it > 0:
+        day_wat = int(df["Days without water"][it-1]) + 1
+        amt_wat += df["Days without water"][it-1]
+    new_row = [
         img_name,
         m,
         d,
         h,
-        SENSOR_ARR[0],
-        df['Soil Moisture'].mean(),
-        SENSOR_ARR[1],
-        df['Temperature'].mean(),
-        SENSOR_ARR[2],
-        df['Humidity'].mean(),
-        SENSOR_ARR[3],
+        new_dat[0],
         df['Light Intensity'].mean(),
-        0,
-        0,
-        1
-    }
-    df.append_row(new_row)
+        new_dat[1],
+        df['Soil Moisture'].mean(),
+        new_dat[2],
+        df['Temperature'].mean(),
+        new_dat[3],
+        df['Humidity'].mean(),
+        w,
+        amt_wat,
+        day_wat
+    ]
+    df.loc[len(df.index)] = new_row
+    # df = pd.concat([df, new_row], axis=1).reset_index(drop=True)
 
     return df
