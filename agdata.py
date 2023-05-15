@@ -1,9 +1,10 @@
-from os.path import exists
-from time import sleep
 import csv
 import json
+from os.path import exists
+from time import sleep
+from typing import Any, List, Union
+
 import pandas as pd
-from typing import Any, Union, List
 import serial
 from serial.tools import list_ports
 
@@ -14,6 +15,7 @@ Num = Union[int, float]
 def acq_sensors() -> list():
     """
     Temp Docstring
+    TODO: Add a conversion for MCP3008 instead of serial
     """
     PORT_LIST = list(list_ports.comports())
     # for p in PORT_LIST:
