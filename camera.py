@@ -3,18 +3,17 @@
 Docstring for camera.py.
 """
 
-from datetime import datetime
 import os
 import sys
+from datetime import datetime
+
 import cv2
-import numpy as np
 # import matplotlib
 import matplotlib.pyplot as plt
-import pandas as pd
 
-import webhook
 import agdata
 import image
+import webhook
 
 ### Start Initial Setup ###
 # Versions
