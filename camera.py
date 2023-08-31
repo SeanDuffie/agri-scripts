@@ -73,11 +73,6 @@ data = agdata.app_dat(NAME,it,M,D,H,0,data,new_dat)
 data.to_csv(path_or_buf=OUTDAT+"dat.csv",header=True,index=False)
 print(data)
 print()
-# Manual Method
-# with open(OUTDAT + "dat.csv", "w", encoding="utf-8") as f:
-#     csvwriter = csv.writer(f)
-#     csvwriter.writerow(fields)
-#     csvwriter.writerows(rows)
 #### End Acquire Sensor Measurements ####
 
 
@@ -150,7 +145,7 @@ if True:
     images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg") and img.find("_02h")]
     images.sort()
     # Compile image array into a video
-    print("Compiling video...")
+    print("Compiling video...", VID_NAME)
     OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
     for filename in images:
         img = cv2.imread(IMGDIR + filename)  # Read in Raw image

@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 if sys.platform.startswith("linux"):
     if sys.platform.find("64"):
         print("64-bit System - Using Picamera2...")
-        from picamera2 import Picamera2, Preview        # For 64-bit OS
+        from picamera2 import Picamera2                 # For 64-bit OS
     else:
         print("32-bit System - Using Picamera...")
         from picamera import PiCamera                   # For 32-bit OS
