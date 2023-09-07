@@ -121,8 +121,8 @@ if True:
     # Plot Total Soil Moisture
     plt.plot(iter, data["Temperature"])
     plt.xlabel("Time (Hours)")
-    plt.ylabel("Temperature in F")
-    plt.savefig("data/TempF.png")
+    plt.ylabel("Temperature in C")
+    plt.savefig("data/TempC.png")
     plt.close()
     
     # Plot average temperature per hour
