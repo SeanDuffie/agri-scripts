@@ -1,12 +1,18 @@
 import dash
 import flask
+import os
 
 server = flask.Flask(__name__)
 
 
 @server.route("/")
 def home():
-    return "Hello, Flask!"
+    print(os.getcwd())
+    return flask.render_template("home.html")
+
+@server.route("/stats")
+def stats():
+    return flask.render_template("stats.html")
 
 
 app = dash.Dash(server=server, routes_pathname_prefix="/dash/")
