@@ -38,6 +38,9 @@ app.layout = dash.html.Div([
     ),
 ])
 
+# @app.route("/video")
+# def index():
+
 
 # Define callbacks to update graphs
 @app.callback(
