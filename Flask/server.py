@@ -9,13 +9,20 @@ import plotly.express as px
 from dash.dependencies import Input, Output
 from plot_dat import Dataset
 
-server = flask.Flask(__name__)
+server = flask.Flask(__name__, static_folder="static")
 app = dash.Dash(__name__, server=server)#, routes_pathname_prefix="/dash/")
 data = Dataset("./data/dat.csv")
 
 
 app.layout = dash.html.Div([
     dash.html.H1("This is the Dash app."),
+
+    dash.html.Video(
+        controls=True,
+        id = "movie_player",
+        src = dash.get_asset_url("static/time-lapse.mp4"),
+        autoPlay=True
+    ),
 
     dash.dcc.Graph(id="Humidity vs Light"),
     dash.dcc.Graph(id="Daily Humidity"),
@@ -29,7 +36,7 @@ app.layout = dash.html.Div([
         interval=600 * 1000,  # in milliseconds
         n_intervals=0
     ),
-    ])
+])
 
 
 # Define callbacks to update graphs

@@ -37,6 +37,7 @@ print()
 RTDIR = os.getcwd()
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
+VID_DIR = RTDIR + "/Flask/static"
 
 # If autocaps or data don't exist, create them! They are gitignored...
 if not os.path.exists(IMGDIR):
@@ -45,7 +46,7 @@ if not os.path.exists(OUTDAT):
     os.makedirs(OUTDAT)
 
 IMG_NAME = f"{IMGDIR}{NAME}.jpg"            # image name
-VID_NAME = f"{RTDIR}/time-lapse.mp4"        # video name
+VID_NAME = f"{VID_DIR}/time-lapse.mp4"        # video name
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
 FPS = 15                                    # video fps
 RAW_SIZE = (3280, 2465)                     # camera resolution
