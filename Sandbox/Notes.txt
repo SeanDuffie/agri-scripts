@@ -1,0 +1,2 @@
+CSV Headers:
+Iteration, Name, Month, Day, Hour, Soil Moisture, Avg SM, Temperature, Avg T, Humidity, Avg H, Light Intensity, Avg L, Watered?, Picture?, Amount Watered, Days without water
