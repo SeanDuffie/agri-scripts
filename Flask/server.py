@@ -53,7 +53,7 @@ app.layout = dash.html.Div([
     Input('interval-component', 'n_intervals')
 )
 def update_graphs(n_intervals):
-    print(f"{datetime.datetime.now()} |\tUpdating...")
+    print(f"{datetime.datetime.now()} |\tUpdating... {n_intervals}")
     humid_light = data.plotHL()
     humid_daily = data.plotToDH()
     light_daily = data.plotToDL()
