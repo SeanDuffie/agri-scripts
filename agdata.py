@@ -1,27 +1,28 @@
-import csv
+"""_summary_"""
 import json
-from os.path import exists
-from time import sleep
-from typing import Any, List, Union
-import time
-from MCP3008 import MCP3008
-import board
-import digitalio
-from adafruit_bme280 import basic as adafruit_bme280
+import os
+import sys
 
 import pandas as pd
-import serial
-from serial.tools import list_ports
 
-Num = Union[int, float]
+if sys.platform.startswith("linux"):
+    RPI = True
+    import board
+    import digitalio
+    from adafruit_bme280 import basic as adafruit_bme280
+
+    from MCP3008 import MCP3008
+
+    spi = board.SPI()
+    cs = digitalio.DigitalInOut(board.D7)
+    bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
+    bme280.sea_level_pressure = 1013.4
+
+    adc = MCP3008()
+else:
+    RPI = False
 
 # struct data (headers/rows/cols)
-spi = board.SPI()
-cs = digitalio.DigitalInOut(board.D7)
-bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
-bme280.sea_level_pressure = 1013.4
-
-adc = MCP3008()
 
 smin = 1024
 lmin = 1024
@@ -29,48 +30,68 @@ smax = 0
 lmax = 0
 
 def acq_sensors() -> list():
+    """ Read in sensor data from RPI sensors
+    
+    The RPI flag allows this to run on Windows without the sensors.
+    This is currently set up for collecting the raw ADC of a capacitive soil moisture sensor and a
+    resistive photovoltaic cell, then the Temperature and Humidity from a BME280.
+
+    Returns:
+        - list: Array of values acquired from the sensors
     """
-    Temp Docstring
-    """
-    SENSOR_ARR = list()
+    sensor_arr = []
 
     # Update MCP3008 ADC Values
-    soil_adc = 1024 - adc.read(0)
-    light_adc = adc.read(1)
+    if RPI:
+        soil_adc = 1024 - adc.read(0)
+        light_adc = adc.read(1)
 
     # # Adjust percentage
     # soil = 100*(soil_adc-smin)/(smax-smin+1)
     # light = 100*(light_adc-lmin)/(lmax-lmin+1)
 
     # Append to list
-    SENSOR_ARR.append(soil_adc)
-    SENSOR_ARR.append(light_adc)
-    SENSOR_ARR.append(bme280.temperature)
-    SENSOR_ARR.append(bme280.humidity)
+    if RPI:
+        sensor_arr.append(soil_adc)
+        sensor_arr.append(light_adc)
+        sensor_arr.append(bme280.temperature)
+        sensor_arr.append(bme280.humidity)
+    else:
+        sensor_arr.append(0)
+        sensor_arr.append(0)
+        sensor_arr.append(0)
+        sensor_arr.append(0)
 
     # Receive the Response from the sensors
-    print(SENSOR_ARR)
+    print(f"{sensor_arr=}")
     print()
 
-    return SENSOR_ARR
+    return sensor_arr
 
-def acq_data(OUTDAT: str) -> pd.DataFrame:
-    """
-    Temp Docstring
+def acq_data(dirname: str) -> pd.DataFrame:
+    """ Reads in all existing data from database
+
+    If there is no database, creates a blank one with headers
+
+    Args:
+        dirname (str): path leading to the dataset directory
+
+    Returns:
+        pd.DataFrame: populated pandas dataframe
     """
     # TODO: Add timing and test different methods (pyarrow?)
 
     # Read data history
-    if (exists(OUTDAT + "dat.csv")):
-        print("Loading current file...")
-        df = pd.read_csv(OUTDAT + 'dat.csv')
-    elif (exists(OUTDAT + "dat.json")):
-        print("Loading current file...")
-        f = open(OUTDAT + "dat.json", encoding="utf-8")
-        df = json.load(f)
-        f.close()
+    if os.path.exists(dirname + "dat.csv"):
+        print("Loading current CSV file...")
+        d_frame = pd.read_csv(dirname + 'dat.csv')
+    elif os.path.exists(dirname + "dat.json"):
+        print("Loading current JSON file...")
+        with open(dirname + "dat.json", encoding="utf-8") as json_file:
+            d_frame = json.load(json_file)
     else:
-        df = pd.DataFrame(columns = [
+        # Pandas Dataframe w/ headers
+        d_frame = pd.DataFrame(columns = [
                 'Name',
                 'Month',
                 'Day',
@@ -85,22 +106,42 @@ def acq_data(OUTDAT: str) -> pd.DataFrame:
             ]
         )
 
-    return df
+    return d_frame
 
 def app_dat(img_name: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
-    """
-    Temp Docstring
+    """ Process and Store the new data
+
+    Args:
+        img_name (str): Name of the image, filename and/or timestamp
+        it (int): iterator
+        m (int): month
+        d (int): day
+        h (int): hour
+        w (bool): Whether water was added or not
+        df (pd.DataFrame): original dataframe
+        new_dat (pd.DataFrame): new dataframe entry
+
+    Returns:
+        pd.DataFrame: New dataframe with additional entry appended
     """
 
-    # Process and Store the new data
+    # 
     print("Appending New Data..")
-    day_wat = 0
-    amt_wat = 0
+    day_wat: int = 0
+    amt_wat: int = 0
+
+    # Load in previous entries if the list isn't empty
+    if it > 0:
+        day_wat = int(df["Days without water"][it-1])
+        amt_wat = int(df["Amount Watered"][it-1])
+
+    # If Pump was activated, iterate the water counter, else iterate dry
     if w:
         amt_wat += 1
-    if it > 0:
-        day_wat = int(df["Days without water"][it-1]) + 1
-        amt_wat += df["Days without water"][it-1]
+    else:
+        day_wat += 1
+
+    # Package and append new dataframe entry
     new_row = [
         img_name,
         m,

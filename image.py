@@ -1,70 +1,111 @@
 """
 
 """
+
 import os
 import sys
-from time import sleep
+import time
+
 import cv2
 import numpy as np
-from numpy import uint8
 from numpy.typing import NDArray
+
+OS_MODE: int = -1
+
 if sys.platform.startswith("linux"):
     if sys.platform.find("64"):
         print("64-bit System - Using Picamera2...")
-        from picamera2 import Picamera2                 # For 64-bit OS
+        from picamera2 import Picamera2  # For 64-bit OS
+        OS_MODE = 0
     else:
         print("32-bit System - Using Picamera...")
-        from picamera import PiCamera                   # For 32-bit OS
+        from picamera import PiCamera  # For 32-bit OS
+        OS_MODE = 1
 else:
     print("Not Linux - Ignoring Picamera...")
+    OS_MODE = 2
 
-def acq_img(img_name:str, raw_size, img_size):
-    """
-    Temp Docstring
+# ONLY SET THIS IF BLANK IMAGE DESIRED
+# OS_MODE = 3
+
+def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
+    """ Grabs the image from the local camera system
+
+    This function has support for the old 32 bit PiCamera library, 64 bit PiCamera2, and the
+    default opencv2 library. It will grab a picture and resize it to the desired resolution.
+
+    Args:
+        - raw_size (tuple, optional): Native camera resolution - only PiCamera2. Default (3280, 2465)
+        - img_size (tuple, optional): Output Resolution - Defaults to (1920, 1080).
+
+    Returns:
+        NDArray: The current - size adjusted - image from the camera
     """
     cur_img = np.zeros([img_size[1], img_size[0], 3], dtype = np.uint8)
     cur_img[:,:] = [255, 255, 255]
     print("Starting Camera...")
-    if sys.platform.find("win") == -1:
-        if os.name.find("64"):
-            ## If 64 bit system
-            picam2 = Picamera2()
-            capture_config = picam2.create_still_configuration(
-                main={
-                    "size": raw_size,
-                    "format": "RGB888"
-                }
-            )
-            picam2.start(config=capture_config)
-            sleep(3) # wait for camera to focus
+
+    # If 64 bit Raspberry Pi
+    if OS_MODE == 0:
+        print("Using 64 bit PiCamera2")
+        picam2 = Picamera2()
+        capture_config = picam2.create_still_configuration(
+            main={
+                "size": raw_size,
+                "format": "RGB888"
+            }
+        )
+        picam2.start(config=capture_config)
+        time.sleep(2) # wait for camera to focus
+
+        ## Capture image and stop
+        # metadata = picam2.capture_metadata()
+        cur_img = picam2.capture_array()
+        cur_img = cv2.resize(cur_img, img_size)
+    # If 32 bit Raspberry Pi
+    elif OS_MODE == 1:
+        print("Using 32 bit PiCamera")
+        with PiCamera() as camera:
+            camera.resolution = img_size
+            camera.framerate = 24
+            # camera.start_preview()
+            time.sleep(2) # wait for camera to focus
 
             ## Capture image and stop
-            # metadata = picam2.capture_metadata()
-            cur_img = picam2.capture_array()
-            cur_img = cv2.resize(cur_img, img_size)
-        else:
-            ## If 32 bit system
-            with PiCamera() as camera:
-                camera.start_preview()
-                sleep(3) # wait for camera to focus
-
-                ## Capture image and stop
-                camera.capture(img_name)
-                camera.stop_preview()
-        print("Picture Acquired!\n")
+            camera.capture(cur_img, 'rgb')
+            # camera.stop_preview()
+    # If using USB camera (Windows)
+    elif OS_MODE == 2:
+        print("Using OpenCV VideoCapture")
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
+        cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
+        time.sleep(2)
+        ret, cur_img = cap.read()
+        cv2.VideoCapture(0).release()
     else:
-        print("Windows OS, Saving a blank image...\n")
+        print("Bad OS MODE!")
+        # sys.exit(1)
+
+    print("Picture Acquired!\n")
     return cur_img
 
-def proc_img(img:NDArray[uint8], name:NDArray[uint8]):
-    """
-    Temp Docstring
+def proc_img(img: NDArray, time: str):
+    """ Processes the image and applies edits
+
+    Args:
+        img (NDArray): input image
+        time (str): timestamp of the image being taken
+
+    Returns:
+        NDArray: edited image with overlay applied
     """
     ### Start Post Processing Current Image ###
     print("\nProcessing Image...")
     # Add Timestamp
     off_x, off_y = (50, 50)
-    draw_text(img, name, pos=(off_x, off_y))
+    draw_text(img, time, pos=(off_x, off_y))
 
     # TODO: Append Sensor data somehow
 
@@ -80,18 +121,28 @@ def proc_img(img:NDArray[uint8], name:NDArray[uint8]):
     #### End Post Processing Current Image ####
     return img
 
-def draw_text(img,
-            text,
-            pos=(5,5),
-            font=cv2.FONT_HERSHEY_SIMPLEX,
-            font_scale=1,
-            font_thickness=2,
-            font_color=(255,255,255),
-            background_color=(0,0,0)):
-    """
-    Temp Docstring
+def draw_text(img: NDArray,
+            text: str,
+            pos: tuple = (5,5),
+            font = cv2.FONT_HERSHEY_SIMPLEX,
+            font_scale: int = 1,
+            font_thickness: int = 2,
+            font_color: tuple = (255,255,255),
+            background_color: tuple = (0,0,0)):
+    """ Wrapper function that I made to help me standardize putting text on the image
+
+    Args:
+        img (NDArray): original input image
+        text (str): text to be added to the image
+        pos (tuple, optional): Top left corner of the text. Defaults to (5,5).
+        font (cv2 font, optional): Style of Font. Defaults to cv2.FONT_HERSHEY_SIMPLEX.
+        font_scale (int, optional): Font size. Defaults to 1.
+        font_thickness (int, optional): Font Thickness. Defaults to 2.
+        font_color (tuple, optional): RGB color of font. Defaults to (255,255,255).
+        background_color (tuple, optional): RGB color of background. Defaults to (0,0,0).
     """
     x,y = pos
+    # This is necessary to outline the background, must be larger than text to prevent jumping
     (w,h),_ = cv2.getTextSize(text, font, font_scale, font_thickness)
     cv2.rectangle(img,
                 (x-5, y-5),

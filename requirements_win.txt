@@ -1,0 +1,9 @@
+picamera
+opencv-python
+numpy
+pandas
+pyserial
+requests
+
+# sudo apt install -y python3-libcamera
+# pip3 install picamera2 --upgrade

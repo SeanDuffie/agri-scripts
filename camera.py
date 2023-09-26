@@ -3,12 +3,11 @@
 Docstring for camera.py.
 """
 
+import datetime
 import os
 import sys
-from datetime import datetime
 
 import cv2
-# import matplotlib
 import matplotlib.pyplot as plt
 
 import agdata
@@ -20,16 +19,30 @@ import webhook
 print("Version Diagnostics:")
 print("OS type: ", os.name)
 print("Platform: ", sys.platform)
-print("OS: ", os.uname()[0], os.uname()[2])
-print("Architecture: ", os.uname()[4])
+
+OS_MODE: int = -1
+
+if sys.platform.startswith("linux"):
+    print("OS: ", os.uname()[0], os.uname()[2])
+    print("Architecture: ", os.uname()[4])
+    if sys.platform.find("64"):
+        OS_MODE = 0
+    else:
+        print("32-bit System - Using Picamera...")
+        from picamera import PiCamera  # For 32-bit OS
+        OS_MODE = 1
+else:
+    print("Not Linux - Ignoring Picamera...")
+    OS_MODE = 2
+
 print()
 
 # Acquire initial data
-NOW = datetime.now()
+NOW = datetime.datetime.now()
 M = NOW.strftime("%m")
 D = NOW.strftime("%d")
 H = NOW.strftime("%H")
-NAME = NOW.strftime("%Y-%m-%d_%H:00")
+TIMESTAMP = NOW.strftime("%Y-%m-%d_%Hh")
 print("Current time: ", NOW)
 print()
 
@@ -45,10 +58,10 @@ if not os.path.exists(IMGDIR):
 if not os.path.exists(OUTDAT):
     os.makedirs(OUTDAT)
 
-IMG_NAME = f"{IMGDIR}{NAME}.jpg"            # image name
-VID_NAME = f"{VID_DIR}/time-lapse.mp4"        # video name
+IMG_NAME = f"{IMGDIR}{TIMESTAMP}.jpg"            # image name
+VID_NAME = f"{VID_DIR}/time-lapse.mp4"      # video name
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
-FPS = 15                                    # video fps
+FPS = 24                                    # video fps
 RAW_SIZE = (3280, 2465)                     # camera resolution
 IMG_SIZE = (1920, 1080)                     # video resolution
 
@@ -68,11 +81,11 @@ data = agdata.acq_data(OUTDAT)
 new_dat = agdata.acq_sensors()
 it = len(data["Name"])
 # TODO: Add code to process watering
-data = agdata.app_dat(NAME,it,M,D,H,0,data,new_dat)
+data = agdata.app_dat(TIMESTAMP,it,M,D,H,0,data,new_dat)
 # CSV output
 # Pandas Method
 data.to_csv(path_or_buf=OUTDAT+"dat.csv",header=True,index=False)
-print(data)
+print(f"{data=}")
 print()
 #### End Acquire Sensor Measurements ####
 
@@ -80,11 +93,11 @@ print()
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
 webhook.post_webhook(URL_ON)                            # Turn on Lamp
-cur_img = image.acq_img(IMG_NAME,RAW_SIZE,IMG_SIZE)     # Capture Image
-cur_img = image.proc_img(img=cur_img, name=NAME)        # Process Image
+cur_img = image.acq_img(IMG_SIZE)                       # Capture Image
+cur_img = image.proc_img(img=cur_img, time=TIMESTAMP)        # Process Image
 cv2.imwrite(IMG_NAME, cur_img)                          # Save Image
 if int(H) < 7 or int(H) > 19:
-    webhook.post_webhook(URL_OFF)                                   # Turn off Lamp if Night
+    webhook.post_webhook(URL_OFF)                       # Turn off Lamp if Night
 #### End Acquire Image ####
 
 
@@ -93,17 +106,23 @@ if int(H) == 0:
     print("MIDNIGHT")
 if True:
     ## Start Generate Plots ###
-    cnt = 0
-    iter = []
+    t_stamp = []
+    days = []
     hrs = []
     for stamp in data["Name"]:
-        cnt += 1
-        iter.append(cnt)
-        hrs.append(int(stamp[11:13]))
+        dt = datetime.datetime.strptime(stamp, "%Y-%m-%d_%Hh")
+
+        t_stamp.append(datetime.datetime.timestamp(dt))
+        days.append(dt.day)
+        hrs.append(dt.hour)
+
+    h_ticks: range = range(int(t_stamp[0]), int(t_stamp[len(t_stamp)-1] + 1), 86400)
+    d_ticks: range = range(0, int((t_stamp[len(t_stamp)-1] - t_stamp[0])/86400 + 1))
 
     # Plot Total Light
-    plt.plot(iter, data["Light Intensity"])
-    plt.xlabel("Time (Hours)")
+    plt.plot(t_stamp, data["Light Intensity"])
+    plt.xlabel("Day")
+    plt.xticks(ticks=h_ticks, labels=d_ticks)
     plt.ylabel("Light Exposure")
     plt.savefig("data/Light_Exposure.png")
     plt.close()
@@ -111,8 +130,9 @@ if True:
     # Plot average light per hour
 
     # Plot Total Soil Moisture
-    plt.plot(iter, data["Soil Moisture"])
-    plt.xlabel("Time (Hours)")
+    plt.plot(t_stamp, data["Soil Moisture"])
+    plt.xlabel("Day")
+    plt.xticks(ticks=h_ticks, labels=d_ticks)
     plt.ylabel("Soil Moisture")
     plt.savefig("data/Soil_Moisture.png")
     plt.close()
@@ -120,21 +140,23 @@ if True:
     # Plot average moisture per hour
 
     # Plot Total Soil Moisture
-    plt.plot(iter, data["Temperature"])
-    plt.xlabel("Time (Hours)")
-    plt.ylabel("Temperature in C")
+    plt.plot(t_stamp, data["Temperature"])
+    plt.xlabel("Day")
+    plt.xticks(ticks=h_ticks, labels=d_ticks)
+    plt.ylabel("Temperature (C)")
     plt.savefig("data/TempC.png")
     plt.close()
-    
+
     # Plot average temperature per hour
 
     # Plot Total Soil Moisture
-    plt.plot(iter, data["Humidity"])
-    plt.xlabel("Time (Hours)")
-    plt.ylabel("Air Humidity (Percentage)")
+    plt.plot(t_stamp, data["Humidity"])
+    plt.xlabel("Day")
+    plt.xticks(ticks=h_ticks, labels=d_ticks)
+    plt.ylabel("Air Humidity (%)")
     plt.savefig("data/Humidity.png")
     plt.close()
-    
+
     # Plot average humidity per hour
 
     ## End Generate Plots ##
