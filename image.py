@@ -83,7 +83,7 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
         cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
         time.sleep(2)
         ret, cur_img = cap.read()
-        cv2.VideoCapture(0).release()
+        cap.release()
     else:
         print("Bad OS MODE!")
         # sys.exit(1)
