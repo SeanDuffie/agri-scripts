@@ -1,6 +1,11 @@
 from spidev import SpiDev
 
 class MCP3008:
+    """ Objectifies the setup and interactions with the MCP3008.
+
+    This will help simplify the usage of the ADC in the future, allowing us to better handle
+    errors and also integrate multiple MCP3008 chips - if needed.
+    """
     def __init__(self, bus = 0, device = 0):
         """ Initializes the connection with the MCP3008
 
@@ -15,8 +20,9 @@ class MCP3008:
 
     def open(self):
         """ Opens the SPI connection with the MCP3008
-            NOTE: Should only be called in the init function
-            TODO: Add error handling to return a message when MCP3008 is not connected
+
+        NOTE: Should only be called in the init function
+        TODO: Add error handling to return a message when MCP3008 is not connected
         """
         self.spi.open(self.bus, self.device)
         self.spi.max_speed_hz = 1000000 # 1MHz
