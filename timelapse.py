@@ -221,14 +221,20 @@ class Timelapse:
         os.remove(existing_video_path)
         os.rename(new_video_path, existing_video_path)
 
-    def video_from_frames(self, img_dir, vid_path, fps, img_res):
+    def video_from_frames(self, data_path, img_res, fps = 24):
         # Read in current directory of images
-        logging.info("Reading in Images...")
+        dataset_name = os.path.basename(data_path)
+        img_dir = data_path + "autocaps/"
+        vid_name = data_path + dataset_name + "_timelapse.mp4"
+        logging.info("Reading in Images:\t%s", img_dir)
+
+        # Generate a list of all the frames in the image directory, then sort chronologically
         images = [img for img in os.listdir(img_dir) if img.endswith(".jpg")]
         images.sort()
+
         # Compile image array into a video
-        logging.info("Compiling video...%s", vid_path)
-        vid_writer = cv2.VideoWriter(vid_path, FOURCC, fps, img_res)
+        logging.info("Compiling video:\t%s", vid_name)
+        vid_writer = cv2.VideoWriter(vid_name, FOURCC, fps, img_res)
         for filename in images:
             img = cv2.imread(img_dir + filename)  # Read in Raw image
             vid_writer.write(img)              # writes out each frame to the video file

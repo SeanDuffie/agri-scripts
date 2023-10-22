@@ -49,15 +49,14 @@ print()
 
 # Define Path names
 RTDIR = os.getcwd()
-DATASET = "/data/AeroGarden1/"
-IMGDIR = RTDIR + "/autocaps/"
-OUTDAT = RTDIR + "/data/"
+DATASET = RTDIR + "/data/AeroGarden1/"
+IMGDIR = DATASET + "/autocaps/"
 
 # If autocaps or data don't exist, create them! They are gitignored...
-if not os.path.exists(IMGDIR):
-    os.makedirs(IMGDIR)
 if not os.path.exists(DATASET):
     os.makedirs(DATASET)
+if not os.path.exists(IMGDIR):
+    os.makedirs(IMGDIR)
 
 IMG_NAME = f"{IMGDIR}{TIMESTAMP}.jpg"            # image name
 VID_NAME = f"{DATASET}time-lapse.mp4"      # video name
@@ -67,7 +66,7 @@ RAW_SIZE = (3280, 2465)                     # camera resolution
 IMG_SIZE = (1920, 1080)                     # video resolution
 
 print("Root: ", RTDIR)
-print("Data Dir: ", OUTDAT)
+print("Current Dataset: ", DATASET)
 print("Output Image: ", IMG_NAME)
 print("Output Video: ", VID_NAME)
 print()
@@ -78,14 +77,14 @@ URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKO
 
 
 ### Start Acquire Sensor Measurements ###
-data = agdata.acq_data(OUTDAT)
+data = agdata.acq_data(DATASET)
 new_dat = agdata.acq_sensors()
 it = len(data["Name"])
 # TODO: Add code to process watering
 data = agdata.app_dat(TIMESTAMP,it,M,D,H,0,data,new_dat)
 # CSV output
 # Pandas Method
-data.to_csv(path_or_buf=OUTDAT+"dat.csv",header=True,index=False)
+data.to_csv(path_or_buf=DATASET+"dat.csv",header=True,index=False)
 print(f"{data=}")
 print()
 #### End Acquire Sensor Measurements ####
@@ -108,7 +107,7 @@ if int(H) < 7 or int(H) > 19:
 if int(H) == 0:
     print("MIDNIGHT")
 if True: # Previously I would only compile the video at Midnight, this True does it every hour
-    db = Database(f"{OUTDAT}dat.csv")
+    db = Database(f"{DATASET}dat.csv")
     ## Start Generate Plots ###
     # Plot Total Light
     db.gen_plot(
@@ -140,5 +139,5 @@ if True: # Previously I would only compile the video at Midnight, this True does
     ## End Generate Plots ##
 
     tl = timelapse.Timelapse(DATASET)
-    tl.video_from_frames(img_dir=IMGDIR, vid_path=VID_NAME, fps=FPS, img_res=IMG_SIZE)
+    tl.video_from_frames(data_path=DATASET, img_res=IMG_SIZE, fps=FPS)
 #### End Post Processing Video Compilation ####
