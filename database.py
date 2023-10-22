@@ -52,10 +52,8 @@ class Database:
         last_hour = int(datetime.datetime.timestamp(last_datetime))
 
         # Generate the range that will be labeled on the graph
-        h_ticks: range = range(first_hour, last_hour + 1,86400)     # The actual values on the graph
-        d_ticks: range = range(0, int((last_hour-first_hour)/86400) + 1) # What will be shown to the viewer
-        print(f"{h_ticks=}")
-        print(f"{d_ticks=}")
+        h_ticks: range = range(first_hour, last_hour + 1,86400)             # The actual values on the graph
+        d_ticks: range = range(0, int((last_hour-first_hour)/86400) + 1)    # What will be marked for the viewer
 
         # Generate plot data
         plt.plot(self.d_frame[x_label], self.d_frame[y_label])

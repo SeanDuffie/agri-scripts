@@ -8,11 +8,12 @@ import os
 import sys
 
 import cv2
-import matplotlib.pyplot as plt
 
 import agdata
 import image
 import webhook
+import timelapse
+from database import Database
 
 ### Start Initial Setup ###
 # Versions
@@ -48,18 +49,18 @@ print()
 
 # Define Path names
 RTDIR = os.getcwd()
+DATASET = "/data/AeroGarden1/"
 IMGDIR = RTDIR + "/autocaps/"
 OUTDAT = RTDIR + "/data/"
-VID_DIR = RTDIR + "/Flask/static"
 
 # If autocaps or data don't exist, create them! They are gitignored...
 if not os.path.exists(IMGDIR):
     os.makedirs(IMGDIR)
-if not os.path.exists(OUTDAT):
-    os.makedirs(OUTDAT)
+if not os.path.exists(DATASET):
+    os.makedirs(DATASET)
 
 IMG_NAME = f"{IMGDIR}{TIMESTAMP}.jpg"            # image name
-VID_NAME = f"{VID_DIR}/time-lapse.mp4"      # video name
+VID_NAME = f"{DATASET}time-lapse.mp4"      # video name
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
 FPS = 24                                    # video fps
 RAW_SIZE = (3280, 2465)                     # camera resolution
@@ -93,6 +94,8 @@ print()
 ### Start Acquire Image ###
 # If during inactive hours, do nothing
 webhook.post_webhook(URL_ON)                            # Turn on Lamp
+# TODO: USB control
+# https://stackoverflow.com/questions/59772765/how-to-turn-usb-port-power-on-and-off-in-raspberry-pi-4
 cur_img = image.acq_img(IMG_SIZE)                       # Capture Image
 cur_img = image.proc_img(img=cur_img, time=TIMESTAMP)        # Process Image
 cv2.imwrite(IMG_NAME, cur_img)                          # Save Image
@@ -104,76 +107,38 @@ if int(H) < 7 or int(H) > 19:
 ### Start Post Processing Video Compilation ###
 if int(H) == 0:
     print("MIDNIGHT")
-if True:
+if True: # Previously I would only compile the video at Midnight, this True does it every hour
+    db = Database(f"{OUTDAT}dat.csv")
     ## Start Generate Plots ###
-    t_stamp = []
-    days = []
-    hrs = []
-    for stamp in data["Name"]:
-        dt = datetime.datetime.strptime(stamp, "%Y-%m-%d_%Hh")
-
-        t_stamp.append(datetime.datetime.timestamp(dt))
-        days.append(dt.day)
-        hrs.append(dt.hour)
-
-    h_ticks: range = range(int(t_stamp[0]), int(t_stamp[len(t_stamp)-1] + 1), 86400)
-    d_ticks: range = range(0, int((t_stamp[len(t_stamp)-1] - t_stamp[0])/86400 + 1))
-
     # Plot Total Light
-    plt.plot(t_stamp, data["Light Intensity"])
-    plt.xlabel("Day")
-    plt.xticks(ticks=h_ticks, labels=d_ticks)
-    plt.ylabel("Light Exposure")
-    plt.savefig("data/Light_Exposure.png")
-    plt.close()
-
-    # Plot average light per hour
+    db.gen_plot(
+        title="Light Intensity",
+        x_label="Name",
+        y_label="Light Intensity"
+    )
 
     # Plot Total Soil Moisture
-    plt.plot(t_stamp, data["Soil Moisture"])
-    plt.xlabel("Day")
-    plt.xticks(ticks=h_ticks, labels=d_ticks)
-    plt.ylabel("Soil Moisture")
-    plt.savefig("data/Soil_Moisture.png")
-    plt.close()
+    db.gen_plot(
+        title="Soil Moisture",
+        x_label="Name",
+        y_label="Soil Moisture"
+    )
 
-    # Plot average moisture per hour
+    # Plot Total Temperature
+    db.gen_plot(
+        title="Temperature",
+        x_label="Name",
+        y_label="Temperature"
+    )
 
-    # Plot Total Soil Moisture
-    plt.plot(t_stamp, data["Temperature"])
-    plt.xlabel("Day")
-    plt.xticks(ticks=h_ticks, labels=d_ticks)
-    plt.ylabel("Temperature (C)")
-    plt.savefig("data/TempC.png")
-    plt.close()
-
-    # Plot average temperature per hour
-
-    # Plot Total Soil Moisture
-    plt.plot(t_stamp, data["Humidity"])
-    plt.xlabel("Day")
-    plt.xticks(ticks=h_ticks, labels=d_ticks)
-    plt.ylabel("Air Humidity (%)")
-    plt.savefig("data/Humidity.png")
-    plt.close()
-
-    # Plot average humidity per hour
-
+    # Plot Total Humidity
+    db.gen_plot(
+        title="Humidity",
+        x_label="Name",
+        y_label="Humidity"
+    )
     ## End Generate Plots ##
 
-
-    IMG_ARR = []
-    # Read in current directory of images
-    print("Reading in Images...")
-    images = [img for img in os.listdir(IMGDIR) if img.endswith(".jpg") and img.find("_02h")]
-    images.sort()
-    # Compile image array into a video
-    print("Compiling video...", VID_NAME)
-    OUT = cv2.VideoWriter(VID_NAME, FOURCC, FPS, IMG_SIZE)
-    for filename in images:
-        img = cv2.imread(IMGDIR + filename)  # Read in Raw image
-        IMG_ARR.append(img)         # Add image to array
-        OUT.write(img)              # writes out each frame to the video file
-    OUT.release()
-    print("Time-Lapse Released!\n")
+    tl = timelapse.Timelapse(DATASET)
+    tl.video_from_frames(img_dir=IMGDIR, vid_path=VID_NAME, fps=FPS, img_res=IMG_SIZE)
 #### End Post Processing Video Compilation ####
