@@ -107,34 +107,25 @@ webhook.post_webhook(URL_OFF)                       # Turn off Lamp if Night
 if int(H) == 0:
     print("MIDNIGHT")
 if True: # Previously I would only compile the video at Midnight, this True does it every hour
-    print(DATASET)
     db = Database(DATASET)
     ## Start Generate Plots ###
     # Plot Total Light
     db.gen_plot(
-        title="Light Intensity",
-        x_label="Name",
         y_label="Light Intensity"
     )
 
     # Plot Total Soil Moisture
     db.gen_plot(
-        title="Soil Moisture",
-        x_label="Name",
         y_label="Soil Moisture"
     )
 
     # Plot Total Temperature
     db.gen_plot(
-        title="Temperature",
-        x_label="Name",
         y_label="Temperature"
     )
 
     # Plot Total Humidity
     db.gen_plot(
-        title="Humidity",
-        x_label="Name",
         y_label="Humidity"
     )
     ## End Generate Plots ##

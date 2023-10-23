@@ -14,7 +14,7 @@ RTDIR: str = os.getcwd()
 class Database:
     """_summary_
     """
-    def __init__(self, path):
+    def __init__(self, path: str = ""):
         """
         TODO: Dataframe or path?
         """
@@ -23,40 +23,58 @@ class Database:
         logging.basicConfig(format=fmt_main, level=logging.INFO,
                     datefmt="%Y-%m-%d %H:%M:%S")
 
-        self.dir_path = path
-        self.data_path = path + "dat.csv"
-
         # Validate Path
-        if self.data_path == "" or not os.path.exists(self.data_path):
+        if path == "" or not os.path.exists(path):
             logging.info("Path blank, use tkinter dialog to pick.")
-            self.data_path = filedialog.askopenfilename(
+            path = filedialog.askopenfilename(
                 title="Select Current Data File",
                 filetypes=[
                     ("CSV Reports", "csv")
                 ],
                 initialdir=f"{RTDIR}\\database\\")
-            if self.data_path == "":
+            if path == "":
                 logging.error("Tkinter Filedialog cancelled.")
                 sys.exit(1)
 
-        logging.info("Opening file:\t%sdat.csv", self.data_path)
+        self.dir_path = os.path.dirname(path)
+        self.data_path = self.dir_path + "/dat.csv"
+
+        logging.info("Opening file:\t%s", self.data_path)
         # self.d_frame: pd.DataFrame = pd.DataFrame([])
         self.d_frame: pd.DataFrame = pd.read_csv(self.data_path)
+        
+        def timestamp2UTC(tstamp: str):
+            """ Function to apply to the dataframe to convert the timestamps to plottable utc ints
 
-    def gen_plot(self, title: str, x_label: str, y_label: str, start: int=0, stop: int=-1):
+            Args:
+                tstamp (str): Raw strng timestamp from dataframe
+
+            Returns:
+                int: utc value, seconds passed since 1970.
+            """
+            dt = datetime.datetime.strptime(tstamp, "%Y-%m-%d_%Hh")
+            utc = int(datetime.datetime.timestamp(dt))
+            return utc
+        self.d_frame["UTC"] = self.d_frame["Name"].apply(timestamp2UTC)
+
+    def gen_plot(self, y_label: str, x_label: str = "UTC", title: str = "", start: int=0, stop: int=-1):
         # Determine the end of the dataset sample
         if stop == -1:
             stop = len(self.d_frame)-1
+        if title == "":
+            title = f"{y_label}_vs_{x_label}"
 
         # First and last hour
-        first_datetime = datetime.datetime.strptime(self.d_frame["Name"][start], "%Y-%m-%d_%Hh")
-        last_datetime = datetime.datetime.strptime(self.d_frame["Name"][stop], "%Y-%m-%d_%Hh")
-        first_hour = int(datetime.datetime.timestamp(first_datetime))
-        last_hour = int(datetime.datetime.timestamp(last_datetime))
+        # first_datetime = datetime.datetime.strptime(self.d_frame["Name"][start], "%Y-%m-%d_%Hh")
+        # last_datetime = datetime.datetime.strptime(self.d_frame["Name"][stop], "%Y-%m-%d_%Hh")
+        # first_hour = int(datetime.datetime.timestamp(first_datetime))
+        # last_hour = int(datetime.datetime.timestamp(last_datetime))
+        first = self.d_frame["UTC"][0]
+        last = self.d_frame["UTC"][len(self.d_frame["UTC"])-1]
 
         # Generate the range that will be labeled on the graph
-        h_ticks: range = range(first_hour, last_hour + 1,86400)             # The actual values on the graph
-        d_ticks: range = range(0, int((last_hour-first_hour)/86400) + 1)    # What will be marked for the viewer
+        h_ticks: range = range(first, last + 1,86400)             # The actual values on the graph
+        d_ticks: range = range(0, int((last-first)/86400) + 1)    # What will be marked for the viewer
 
         # Generate plot data
         plt.plot(self.d_frame[x_label], self.d_frame[y_label])
@@ -76,9 +94,25 @@ class Database:
         pass
 
 if __name__ == "__main__":
-    db = Database("./data/palm1/dat.csv")
+    db = Database()
+    ## Start Generate Plots ###
+    # Plot Total Light
     db.gen_plot(
-        title="Soil Moisture",
-        x_label="Name",
+        y_label="Light Intensity"
+    )
+
+    # Plot Total Soil Moisture
+    db.gen_plot(
         y_label="Soil Moisture"
     )
+
+    # Plot Total Temperature
+    db.gen_plot(
+        y_label="Temperature"
+    )
+
+    # Plot Total Humidity
+    db.gen_plot(
+        y_label="Humidity"
+    )
+    ## End Generate Plots ##
