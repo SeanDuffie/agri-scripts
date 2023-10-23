@@ -107,7 +107,8 @@ webhook.post_webhook(URL_OFF)                       # Turn off Lamp if Night
 if int(H) == 0:
     print("MIDNIGHT")
 if True: # Previously I would only compile the video at Midnight, this True does it every hour
-    db = Database(f"{DATASET}dat.csv")
+    print(DATASET)
+    db = Database(DATASET)
     ## Start Generate Plots ###
     # Plot Total Light
     db.gen_plot(

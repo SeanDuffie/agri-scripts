@@ -23,22 +23,25 @@ class Database:
         logging.basicConfig(format=fmt_main, level=logging.INFO,
                     datefmt="%Y-%m-%d %H:%M:%S")
 
+        self.dir_path = path
+        self.data_path = path + "dat.csv"
+
         # Validate Path
-        if path == "" or not os.path.exists(path):
+        if self.data_path == "" or not os.path.exists(self.data_path):
             logging.info("Path blank, use tkinter dialog to pick.")
-            path = filedialog.askopenfilename(
+            self.data_path = filedialog.askopenfilename(
                 title="Select Current Data File",
                 filetypes=[
                     ("CSV Reports", "csv")
                 ],
                 initialdir=f"{RTDIR}\\database\\")
-            if path == "":
+            if self.data_path == "":
                 logging.error("Tkinter Filedialog cancelled.")
                 sys.exit(1)
 
-        logging.info("Opening file:\t%s", path)
+        logging.info("Opening file:\t%sdat.csv", self.data_path)
         # self.d_frame: pd.DataFrame = pd.DataFrame([])
-        self.d_frame: pd.DataFrame = pd.read_csv(path)
+        self.d_frame: pd.DataFrame = pd.read_csv(self.data_path)
 
     def gen_plot(self, title: str, x_label: str, y_label: str, start: int=0, stop: int=-1):
         # Determine the end of the dataset sample
@@ -63,7 +66,7 @@ class Database:
         plt.xlabel(x_label)
         plt.xticks(ticks=h_ticks, labels=d_ticks)
         plt.ylabel(y_label)
-        plt.savefig(f"data/{title}.png")
+        plt.savefig(f"{self.dir_path}/{title}.png")
         plt.close()
 
     def gen_scatter(self):
