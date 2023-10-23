@@ -98,8 +98,8 @@ webhook.post_webhook(URL_ON)                            # Turn on Lamp
 cur_img = image.acq_img(IMG_SIZE)                       # Capture Image
 cur_img = image.proc_img(img=cur_img, time=TIMESTAMP)        # Process Image
 cv2.imwrite(IMG_NAME, cur_img)                          # Save Image
-if int(H) < 7 or int(H) > 19:
-    webhook.post_webhook(URL_OFF)                       # Turn off Lamp if Night
+# if int(H) < 7 or int(H) > 19:
+webhook.post_webhook(URL_OFF)                       # Turn off Lamp if Night
 #### End Acquire Image ####
 
 
