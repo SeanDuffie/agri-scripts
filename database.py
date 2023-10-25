@@ -64,23 +64,26 @@ class Database:
         # Determine the end of the dataset sample
         if stop == -1:
             stop = len(self.d_frame)-1
+        if start > stop:
+            logging.error("Starting point must be before stopping point.")
+            return False
         if title == "":
             title = f"{y_label}_vs_{x_label}"
 
         # First and last hour
-        # first_datetime = datetime.datetime.strptime(self.d_frame["Name"][start], "%Y-%m-%d_%Hh")
-        # last_datetime = datetime.datetime.strptime(self.d_frame["Name"][stop], "%Y-%m-%d_%Hh")
-        # first_hour = int(datetime.datetime.timestamp(first_datetime))
-        # last_hour = int(datetime.datetime.timestamp(last_datetime))
-        first = self.d_frame["UTC"][0]
-        last = self.d_frame["UTC"][len(self.d_frame["UTC"])-1]
+        first = self.d_frame["UTC"][start]
+        last = self.d_frame["UTC"][stop]
+
+        tstmp1 = datetime.datetime.strftime(datetime.datetime.fromtimestamp(first), "%d-%Hh")
+        tstmp2 = datetime.datetime.strftime(datetime.datetime.fromtimestamp(last), "%d-%Hh")
+        title = f"{title}_{tstmp1}to{tstmp2}"
 
         # Generate the range that will be labeled on the graph
-        h_ticks: range = range(first, last + 1,86400)             # The actual values on the graph
-        d_ticks: range = range(0, int((last-first)/86400) + 1)    # What will be marked for the viewer
+        h_ticks: range = range(first, last + 86400,86400)             # The actual values on the graph
+        d_ticks: range = range(int(first/86400), int(last/86400) + 1)    # What will be marked for the viewer
 
         # Generate plot data
-        plt.plot(self.d_frame[x_label], self.d_frame[y_label])
+        plt.plot(self.d_frame[x_label][start:stop], self.d_frame[y_label][start:stop])
 
         # Label Data
         plt.title(title)
