@@ -114,5 +114,5 @@ if True: # Previously I would only compile the video at Midnight, this True does
     ## End Generate Plots ##
 
     tl = timelapse.Timelapse(DATASET)
-    tl.video_from_frames(data_path=DATASET, img_res=IMG_SIZE, fps=FPS)
+    tl.video_from_frames(img_res=IMG_SIZE, fps=FPS)
 #### End Post Processing Video Compilation ####

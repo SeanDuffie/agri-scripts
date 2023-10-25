@@ -34,7 +34,7 @@ class Database:
                 filetypes=[
                     ("CSV Reports", "csv")
                 ],
-                initialdir=f"{RTDIR}\\database\\")
+                initialdir=f"{RTDIR}/database/")
             if path == "":
                 logging.error("Tkinter Filedialog cancelled.")
                 sys.exit(1)
@@ -62,6 +62,7 @@ class Database:
 
     def gen_plot(self, y_label: str, x_label: str = "UTC", title: str = "", start: int=0, stop: int=-1):
         # Determine the end of the dataset sample
+        SEG = True
         if stop == -1:
             stop = len(self.d_frame)-1
         if start > stop:
@@ -69,6 +70,8 @@ class Database:
             return False
         if title == "":
             title = f"{y_label}_vs_{x_label}"
+        if start == 0 and stop == len(self.d_frame)-1:
+            SEG = False
 
         # First and last hour
         first = self.d_frame["UTC"][start]
@@ -76,7 +79,8 @@ class Database:
 
         tstmp1 = datetime.datetime.strftime(datetime.datetime.fromtimestamp(first), "%d-%Hh")
         tstmp2 = datetime.datetime.strftime(datetime.datetime.fromtimestamp(last), "%d-%Hh")
-        title = f"{title}_{tstmp1}to{tstmp2}"
+        if SEG:
+            title = f"{title}_{tstmp1}to{tstmp2}"
 
         # Generate the range that will be labeled on the graph
         h_ticks: range = range(first, last + 86400,86400)             # The actual values on the graph
@@ -100,7 +104,7 @@ class Database:
         pass
 
 if __name__ == "__main__":
-    db = Database()
+    db = Database("./data/AeroGarden1/dat.csv")
     ## Start Generate Plots ###
     # Plot Total Light
     db.gen_plot(
