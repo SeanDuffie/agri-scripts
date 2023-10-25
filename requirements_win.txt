@@ -4,6 +4,7 @@ numpy
 pandas
 pyserial
 requests
+logging
 
 # sudo apt install -y python3-libcamera
 # pip3 install picamera2 --upgrade

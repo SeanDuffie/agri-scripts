@@ -21,23 +21,6 @@ print("Version Diagnostics:")
 print("OS type: ", os.name)
 print("Platform: ", sys.platform)
 
-OS_MODE: int = -1
-
-if sys.platform.startswith("linux"):
-    print("OS: ", os.uname()[0], os.uname()[2])
-    print("Architecture: ", os.uname()[4])
-    if sys.platform.find("64"):
-        OS_MODE = 0
-    else:
-        print("32-bit System - Using Picamera...")
-        from picamera import PiCamera  # For 32-bit OS
-        OS_MODE = 1
-else:
-    print("Not Linux - Ignoring Picamera...")
-    OS_MODE = 2
-
-print()
-
 # Acquire initial data
 NOW = datetime.datetime.now()
 M = NOW.strftime("%m")
