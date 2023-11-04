@@ -92,7 +92,7 @@ def acq_data(dirname: str) -> pd.DataFrame:
     else:
         # Pandas Dataframe w/ headers
         d_frame = pd.DataFrame(columns = [
-                'Name',
+                'Date',
                 'Month',
                 'Day',
                 'Hour',
@@ -108,11 +108,11 @@ def acq_data(dirname: str) -> pd.DataFrame:
 
     return d_frame
 
-def app_dat(img_name: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
+def app_dat(date: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
     """ Process and Store the new data
 
     Args:
-        img_name (str): Name of the image, filename and/or timestamp
+        date (str): Date of the image, filename and/or timestamp
         it (int): iterator
         m (int): month
         d (int): day
@@ -143,7 +143,7 @@ def app_dat(img_name: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataF
 
     # Package and append new dataframe entry
     new_row = [
-        img_name,
+        date,
         m,
         d,
         h,

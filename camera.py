@@ -62,7 +62,7 @@ URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKO
 ### Start Acquire Sensor Measurements ###
 data = agdata.acq_data(DATASET)
 new_dat = agdata.acq_sensors()
-it = len(data["Name"])
+it = len(data["Date"])
 # TODO: Add code to process watering
 data = agdata.app_dat(TIMESTAMP,it,M,D,H,0,data,new_dat)
 # CSV output

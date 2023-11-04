@@ -58,7 +58,7 @@ class Database:
             dt = datetime.datetime.strptime(tstamp, "%Y-%m-%d_%Hh")
             utc = int(datetime.datetime.timestamp(dt))
             return utc
-        self.d_frame["UTC"] = self.d_frame["Name"].apply(timestamp2UTC)
+        self.d_frame["UTC"] = self.d_frame["Date"].apply(timestamp2UTC)
 
     def gen_plot(self, y_label: str, x_label: str = "UTC", title: str = "", start: int=0, stop: int=-1):
         # Determine the end of the dataset sample

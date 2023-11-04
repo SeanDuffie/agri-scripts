@@ -45,17 +45,17 @@ class Dataset:
         return fig
     
     def plotL(self):
-        fig = px.scatter(self.data, x = "Name", y = "Light Intensity", title="Light over Time")
+        fig = px.scatter(self.data, x = "Date", y = "Light Intensity", title="Light over Time")
         # fig.show()
         return fig
 
     def plotW(self):
-        fig = px.scatter(self.data, x = "Name", y = "Soil Moisture", title="Soil Moisture over Time")
+        fig = px.scatter(self.data, x = "Date", y = "Soil Moisture", title="Soil Moisture over Time")
         # fig.show()
         return fig
 
     def plotT(self):
-        fig = px.scatter(self.data, x = "Name", y = "Temperature", title="Temperature over Time")
+        fig = px.scatter(self.data, x = "Date", y = "Temperature", title="Temperature over Time")
         # fig.show()
         return fig
 
