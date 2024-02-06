@@ -10,7 +10,6 @@ if sys.platform.startswith("linux"):
     import board
     import digitalio
     from adafruit_bme280 import basic as adafruit_bme280
-
     from MCP3008 import MCP3008
 
     spi = board.SPI()

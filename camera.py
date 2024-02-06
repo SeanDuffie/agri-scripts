@@ -7,9 +7,8 @@ import datetime
 import os
 import sys
 
-import cv2
-
 import agdata
+import cv2
 import image
 import timelapse
 import webhook
