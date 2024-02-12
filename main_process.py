@@ -6,9 +6,49 @@
     be drawn. Much of this is computationally expensive. It neither needs to be run in real
     time, nor does it need to be run on the original Raspberry Pi.
 """
+import datetime
+import os
 import sys
 
+import cv2
+
 import process
+
+# from tkinter import filedialog
+
+
+
+### Start Initial Setup ###
+# Versions
+print("Version Diagnostics:")
+print("OS type: ", os.name)
+print("Platform: ", sys.platform)
+
+# Acquire initial data
+NOW = datetime.datetime.now()
+M = NOW.strftime("%m")
+D = NOW.strftime("%d")
+H = NOW.strftime("%H")
+TIMESTAMP = NOW.strftime("%Y-%m-%d_%Hh")
+print("Current time: ", NOW)
+print()
+
+# Define Path names
+RTDIR = os.getcwd()
+DATASET = RTDIR + "/data/AeroGarden1/"
+IMGDIR = DATASET + "/autocaps/"
+
+# If autocaps or data don't exist, create them! They are gitignored...
+if not os.path.exists(DATASET):
+    os.makedirs(DATASET)
+if not os.path.exists(IMGDIR):
+    os.makedirs(IMGDIR)
+
+VID_NAME = f"{process.DATASET}time-lapse.mp4"      # video name
+FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
+FPS = 24                                    # video fps
+RAW_SIZE = (3280, 2465)                     # camera resolution
+IMG_SIZE = (1920, 1080)                     # video resolution
 
 
 def process_data():
@@ -41,7 +81,7 @@ def process_data():
     )
     ## End Generate Plots ##
 
-    tl = process.Timelapse(DATASET)
+    tl = process.Timelapse(VID_NAME)
     tl.video_from_frames(img_res=IMG_SIZE, fps=FPS)
     #### End Post Processing Video Compilation ####
 
