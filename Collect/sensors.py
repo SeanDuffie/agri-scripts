@@ -1,4 +1,4 @@
-""" @file       agdata.py
+""" @file       sensors.py
     @author     Sean Duffie
     @brief      Responsible for collecting the data from sensors, as well as loading existing
                 data from database.
@@ -13,13 +13,15 @@ import json
 import os
 
 import pandas as pd
-from constants import RPI
+
+from .constants import RPI
 
 if RPI:
     import board
     import digitalio
     from adafruit_bme280 import basic as adafruit_bme280
-    from MCP3008 import MCP3008
+
+    from .mcp_3008 import MCP3008
 
     spi = board.SPI()
     cs = digitalio.DigitalInOut(board.D7)

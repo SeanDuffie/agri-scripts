@@ -1,4 +1,4 @@
-picamera
+# picamera
 opencv-python
 numpy
 pandas

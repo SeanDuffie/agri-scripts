@@ -1,12 +1,21 @@
-"""
+""" @file       camera.py
+    @author     Sean Duffie
+    @brief      Handles camera interactions regardless of the operating system.
 
+    This is designed to handle both Windows and Linux (Raspberry Pi), as well as both USB webcams
+    and RPICamera modules through ribbon connectors.
+
+    # TODO: USB control for flash
+    # https://stackoverflow.com/questions/59772765/how-to-turn-usb-port-power-on-and-off-in-raspberry-pi-4
 """
 import time
 
 import cv2
 import numpy as np
-from constants import BIT64, RPI
 from numpy.typing import NDArray
+
+from .constants import BIT64, RPI
+from .webhook import post_webhook
 
 if RPI:
     if BIT64:
@@ -18,8 +27,12 @@ if RPI:
 else:
     print("Not Linux - Ignoring Picamera...")
 
+# Webhook URLs for IFTTT/Smart Plug connected lamps
+URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
+URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
 
-def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
+
+def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080), flash: bool = False, asleep: bool = False):
     """ Grabs the image from the local camera system
 
     This function has support for the old 32 bit PiCamera library, 64 bit PiCamera2, and the
@@ -27,7 +40,9 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
 
     Args:
         - raw_size (tuple, optional): Native camera resolution - only PiCamera2. Default (3280, 2465)
-        - img_size (tuple, optional): Output Resolution - Defaults to (1920, 1080).
+        - img_size (tuple, optional): Output Resolution. Defaults to (1920, 1080).
+        - flash (bool, optional): Should the camera use a flash? Defaults to False.
+        - asleep (bool, optional): Turn off lights after flash if night. Defaults to False.
 
     Returns:
         NDArray: The current - size adjusted - image from the camera
@@ -35,6 +50,10 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
     cur_img = np.zeros([img_size[1], img_size[0], 3], dtype = np.uint8)
     cur_img[:,:] = [255, 255, 255]
     print("Starting Camera...")
+
+    if flash:
+        # Enable flash - using webhook for now
+        post_webhook(URL_ON)                        # Turn on Lamp for picture
 
     # If 64 bit Raspberry Pi
     if RPI:
@@ -77,15 +96,19 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
         ret, cur_img = cap.read()
         cap.release()
 
+    if flash and asleep:
+        # Disable Flash - using webhook for now
+        post_webhook(URL_OFF)                       # Turn off Lamp if Night
+
     print("Picture Acquired!\n")
     return cur_img
 
-def proc_img(img: NDArray, time: str):
+def proc_img(img: NDArray, tstmp: str):
     """ Processes the image and applies edits
 
     Args:
         img (NDArray): input image
-        time (str): timestamp of the image being taken
+        tstmp (str): timestamp of the image being taken
 
     Returns:
         NDArray: edited image with overlay applied
@@ -94,7 +117,7 @@ def proc_img(img: NDArray, time: str):
     print("\nProcessing Image...")
     # Add Timestamp
     off_x, off_y = (50, 50)
-    draw_text(img, time, pos=(off_x, off_y))
+    draw_text(img, tstmp, pos=(off_x, off_y))
 
     # TODO: Append Sensor data somehow
 
