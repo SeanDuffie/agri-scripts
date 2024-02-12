@@ -9,12 +9,9 @@ RPI = False
 BIT64 = False
 SET_NAME = "English_Ivy"
 
+# Determine if the OS platform is Linux (if so then probably is a Raspberry Pi)
 if sys.platform.startswith("linux"):
     RPI = True
-    import board
-    import digitalio
-    from adafruit_bme280 import basic as adafruit_bme280
-    from MCP3008 import MCP3008
 
     # Determine if RPI has 64 bit OS, necessary for the different version of picamera
     if sys.platform.find("64"):

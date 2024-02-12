@@ -1,32 +1,23 @@
 """
 
 """
-
-import os
-import sys
 import time
 
 import cv2
 import numpy as np
+from constants import BIT64, RPI
 from numpy.typing import NDArray
 
-OS_MODE: int = -1
-
-if sys.platform.startswith("linux"):
-    if sys.platform.find("64"):
+if RPI:
+    if BIT64:
         print("64-bit System - Using Picamera2...")
         from picamera2 import Picamera2  # For 64-bit OS
-        OS_MODE = 0
     else:
         print("32-bit System - Using Picamera...")
         from picamera import PiCamera  # For 32-bit OS
-        OS_MODE = 1
 else:
     print("Not Linux - Ignoring Picamera...")
-    OS_MODE = 2
 
-# ONLY SET THIS IF BLANK IMAGE DESIRED
-# OS_MODE = 3
 
 def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
     """ Grabs the image from the local camera system
@@ -46,36 +37,37 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
     print("Starting Camera...")
 
     # If 64 bit Raspberry Pi
-    if OS_MODE == 0:
-        print("Using 64 bit PiCamera2")
-        picam2 = Picamera2()
-        capture_config = picam2.create_still_configuration(
-            main={
-                "size": raw_size,
-                "format": "RGB888"
-            }
-        )
-        picam2.start(config=capture_config)
-        time.sleep(2) # wait for camera to focus
-
-        ## Capture image and stop
-        # metadata = picam2.capture_metadata()
-        cur_img = picam2.capture_array()
-        cur_img = cv2.resize(cur_img, img_size)
-    # If 32 bit Raspberry Pi
-    elif OS_MODE == 1:
-        print("Using 32 bit PiCamera")
-        with PiCamera() as camera:
-            camera.resolution = img_size
-            camera.framerate = 24
-            # camera.start_preview()
+    if RPI:
+        if BIT64:
+            print("Using 64 bit PiCamera2")
+            picam2 = Picamera2()
+            capture_config = picam2.create_still_configuration(
+                main={
+                    "size": raw_size,
+                    "format": "RGB888"
+                }
+            )
+            picam2.start(config=capture_config)
             time.sleep(2) # wait for camera to focus
 
             ## Capture image and stop
-            camera.capture(cur_img, 'rgb')
-            # camera.stop_preview()
+            # metadata = picam2.capture_metadata()
+            cur_img = picam2.capture_array()
+            cur_img = cv2.resize(cur_img, img_size)
+        # If 32 bit Raspberry Pi
+        else:
+            print("Using 32 bit PiCamera")
+            with PiCamera() as camera:
+                camera.resolution = img_size
+                camera.framerate = 24
+                # camera.start_preview()
+                time.sleep(2) # wait for camera to focus
+
+                ## Capture image and stop
+                camera.capture(cur_img, 'rgb')
+                # camera.stop_preview()
     # If using USB camera (Windows)
-    elif OS_MODE == 2:
+    else:
         print("Using OpenCV VideoCapture")
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
@@ -84,9 +76,6 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080)):
         time.sleep(2)
         ret, cur_img = cap.read()
         cap.release()
-    else:
-        print("Bad OS MODE!")
-        # sys.exit(1)
 
     print("Picture Acquired!\n")
     return cur_img

@@ -1,12 +1,21 @@
-"""_summary_"""
+""" @file       agdata.py
+    @author     Sean Duffie
+    @brief      Responsible for collecting the data from sensors, as well as loading existing
+                data from database.
+
+    This is configured
+    
+    TODO: Incorporate SQL into the database interaction
+    FIXME: Loading up existing data takes time and only increases as more points are collected,
+            figure out a way to do this faster or without loading everthing
+"""
 import json
 import os
-import sys
 
 import pandas as pd
+from constants import RPI
 
-if sys.platform.startswith("linux"):
-    RPI = True
+if RPI:
     import board
     import digitalio
     from adafruit_bme280 import basic as adafruit_bme280
@@ -18,10 +27,6 @@ if sys.platform.startswith("linux"):
     bme280.sea_level_pressure = 1013.4
 
     adc = MCP3008()
-else:
-    RPI = False
-
-# struct data (headers/rows/cols)
 
 smin = 1024
 lmin = 1024
@@ -30,10 +35,12 @@ lmax = 0
 
 def acq_sensors() -> list():
     """ Read in sensor data from RPI sensors
-    
+
     The RPI flag allows this to run on Windows without the sensors.
     This is currently set up for collecting the raw ADC of a capacitive soil moisture sensor and a
     resistive photovoltaic cell, then the Temperature and Humidity from a BME280.
+
+    FIXME: create a dictionary to return so the output type can be documented/predictable
 
     Returns:
         - list: Array of values acquired from the sensors
@@ -70,7 +77,9 @@ def acq_sensors() -> list():
 def acq_data(dirname: str) -> pd.DataFrame:
     """ Reads in all existing data from database
 
-    If there is no database, creates a blank one with headers
+    NOTE: If there is no database, creates a blank one with headers
+
+    FIXME: Research better database methods (SQL?)
 
     Args:
         dirname (str): path leading to the dataset directory
@@ -109,6 +118,8 @@ def acq_data(dirname: str) -> pd.DataFrame:
 
 def app_dat(date: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
     """ Process and Store the new data
+
+    FIXME: Research better insertion methods (SQL?)
 
     Args:
         date (str): Date of the image, filename and/or timestamp
