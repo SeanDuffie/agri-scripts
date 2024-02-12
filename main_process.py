@@ -44,12 +44,17 @@ if not os.path.exists(DATASET):
 if not os.path.exists(IMGDIR):
     os.makedirs(IMGDIR)
 
-VID_NAME = f"{process.DATASET}time-lapse.mp4"      # video name
+VID_NAME = f"{DATASET}time-lapse.mp4"      # video name
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
 FPS = 24                                    # video fps
 RAW_SIZE = (3280, 2465)                     # camera resolution
 IMG_SIZE = (1920, 1080)                     # video resolution
 
+print("Root: ", RTDIR)
+print("Current Dataset: ", DATASET)
+print("Output Video: ", VID_NAME)
+print()
+#### End Initial Setup ####
 
 def process_data():
     """ Main Runner for the Processing section
