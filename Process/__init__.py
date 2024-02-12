@@ -2,4 +2,6 @@
     @author     Sean Duffie
     @brief      Module imports
 """
-from constants import FPS
+from constants import FPS, DATASET
+from database import Database
+from timelapse import Timelapse
