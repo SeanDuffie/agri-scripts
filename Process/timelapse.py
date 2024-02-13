@@ -9,11 +9,8 @@ import logging
 import os
 import sys
 from tkinter import filedialog
-import image
 
 import cv2
-import numpy as np
-from numpy.typing import NDArray
 
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
 
@@ -86,7 +83,7 @@ class Timelapse:
 
         Args:
             img_res (tuple): resolution of the output video, (x,y)
-            fps (int, optional): FPS of the output video, higher is smoother but shorter. Defaults to 24.
+            fps (int, optional): output FPS, higher is smoother but shorter. Defaults to 24.
         """
         # Read in current directory of images
         img_dir = f"{self.path}/autocaps/"

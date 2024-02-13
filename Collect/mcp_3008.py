@@ -1,4 +1,17 @@
+""" @file       MCP3008.py
+    @author     Sean Duffie
+    @brief      Responsible for collecting the data from sensors, as well as loading existing
+                data from database.
+
+    TODO: Add read_all()
+
+    This python class is responsible for wrapping any interactions with the MCP3008
+    The chipset is an 8 channel ADC that communicates over SPI, this makes it useful to connect
+    many different Analog Sensors where Analog Input pins may be limited or non-existent.
+    There is also a 4 channel variant of the same chipset.
+"""
 from spidev import SpiDev
+
 
 class MCP3008:
     """ Objectifies the setup and interactions with the MCP3008.

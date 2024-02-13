@@ -61,6 +61,18 @@ class Database:
         self.d_frame["UTC"] = self.d_frame["Date"].apply(timestamp2UTC)
 
     def gen_plot(self, y_label: str, x_label: str = "UTC", title: str = "", start: int=0, stop: int=-1):
+        """_summary_
+
+        Args:
+            y_label (str): _description_
+            x_label (str, optional): _description_. Defaults to "UTC".
+            title (str, optional): _description_. Defaults to "".
+            start (int, optional): _description_. Defaults to 0.
+            stop (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            _type_: _description_
+        """
         # Determine the end of the dataset sample
         SEG = True
         if stop == -1:
@@ -83,8 +95,8 @@ class Database:
             title = f"{title}_{tstmp1}to{tstmp2}"
 
         # Generate the range that will be labeled on the graph
-        h_ticks: range = range(first, last + 86400,86400)             # The actual values on the graph
-        d_ticks: range = range(int(first/86400), int(last/86400) + 1)    # What will be marked for the viewer
+        h_ticks: range = range(first, last + 86400,86400)             # Actual values on the graph
+        d_ticks: range = range(int(first/86400), int(last/86400) + 1)    # Marked for the viewer
 
         # Generate plot data
         plt.plot(self.d_frame[x_label][start:stop], self.d_frame[y_label][start:stop])
@@ -98,10 +110,12 @@ class Database:
         plt.close()
 
     def gen_scatter(self):
-        pass
-    
+        """_summary_
+        """
+
     def gen_bar(self):
-        pass
+        """_summary_
+        """
 
 if __name__ == "__main__":
     db = Database("./data/AeroGarden1/dat.csv")
