@@ -94,6 +94,8 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080), flas
         cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
         time.sleep(2)
         ret, cur_img = cap.read()
+        if not ret:
+            print("Error! Image not read!")
         cap.release()
 
     if flash and asleep:
