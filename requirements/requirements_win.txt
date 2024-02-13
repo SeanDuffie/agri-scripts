@@ -1,10 +1,11 @@
-picamera
+# picamera
 opencv-python
 numpy
 pandas
 pyserial
 requests
 logging
+matplotlib
 
 # sudo apt install -y python3-libcamera
 # pip3 install picamera2 --upgrade
