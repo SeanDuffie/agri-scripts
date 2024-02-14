@@ -4,6 +4,7 @@
 """
 import logging
 import sqlite3
+import pandas as pd
 
 # from typing import Any, Dict, Protocol, Union
 # from typing_extensions import TypeAlias, Annotated
@@ -63,6 +64,9 @@ class Database():
             print(e)
 
         return conn
+
+    def table_from_df(self, df: pd.DataFrame):
+        df.to_sql()
 
     def create_table(self,
                      conn: sqlite3.Connection,
