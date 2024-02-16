@@ -4,6 +4,7 @@
 """
 import logging
 import sqlite3
+
 import pandas as pd
 
 # from typing import Any, Dict, Protocol, Union
@@ -35,16 +36,6 @@ class Database():
         # Create a cursor
         self.cursor = self.con.cursor()
 
-
-        # Log a message
-        project = ('Cool App with SQLite & Python', '2015-01-01', '2015-01-30');
-        sql = f''' INSERT INTO {tname}(name,begin_date,end_date)
-                    VALUES(?,?,?) '''
-        self.cursor.execute(sql, project)
-
-        # Close the connection
-        self.con.close()
-
     def create_connection(self, db_file: str = "my_database.sqlite") -> sqlite3.Connection:
         """_summary_
 
@@ -65,8 +56,24 @@ class Database():
 
         return conn
 
-    def table_from_df(self, df: pd.DataFrame):
-        df.to_sql()
+    def table_from_df(self, df: pd.DataFrame, tname: str) -> bool:
+        """_summary_
+
+        Args:
+            df (pd.DataFrame): _description_
+        """
+        return df.to_sql(tname, self.con, if_exists="fail", index=True)
+
+    def get_df(self, tname: str) -> pd.DataFrame:
+        """_summary_
+
+        Args:
+            table (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        return pd.read_sql(f"select * from {tname}", self.con)
 
     def create_table(self,
                      conn: sqlite3.Connection,
@@ -124,9 +131,13 @@ class Database():
         return True
 
 if __name__ == "__main__":
+    dat = pd.read_csv(filepath_or_buffer="./data/AeroGarden1/dat.csv")
+
     table = [
         ("name", "text", "NOT NULL"),
         ("begin_date", "text", ""),
         ("end_date", "text", "")
     ]
-    Database(tname="tbl", fname="test.db", cols=table)
+    db = Database(tname="tbl", fname="test.db", cols=table)
+    db.table_from_df(dat, "csv")
+    print(db.get_df("csv"))
