@@ -5,6 +5,7 @@ data/
 # Outputs
 *.mp4
 *.avi
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
