@@ -8,13 +8,14 @@
     # TODO: USB control for flash
     # https://stackoverflow.com/questions/59772765/how-to-turn-usb-port-power-on-and-off-in-raspberry-pi-4
 """
+import datetime
 import time
 
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 
-from .constants import BIT64, RPI
+from .constants import ACTIVE_START, ACTIVE_STOP, BIT64, RPI
 from .webhook import post_webhook
 
 if RPI:
@@ -32,7 +33,11 @@ URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxs
 URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
 
 
-def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080), flash: bool = False, asleep: bool = False):
+def acq_img(tstmp: datetime.datetime,
+            name: str,
+            raw_size: tuple = (3280, 2465),
+            img_size: tuple = (1920, 1080),
+            flash: bool = False):
     """ Grabs the image from the local camera system
 
     This function has support for the old 32 bit PiCamera library, 64 bit PiCamera2, and the
@@ -98,14 +103,15 @@ def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080), flas
             print("Error! Image not read!")
         cap.release()
 
-    if flash and asleep:
+    if flash and not ACTIVE_START <= tstmp.hour <= ACTIVE_STOP:
         # Disable Flash - using webhook for now
         post_webhook(URL_OFF)                       # Turn off Lamp if Night
 
     print("Picture Acquired!\n")
-    return cur_img
+    timestamp = tstmp.strftime("%Y-%m-%d_%Hh")
+    return proc_img(cur_img, timestamp, name)
 
-def proc_img(img: NDArray, tstmp: str):
+def proc_img(img: NDArray, tstmp: str, name: str):
     """ Processes the image and applies edits
 
     Args:
@@ -115,8 +121,8 @@ def proc_img(img: NDArray, tstmp: str):
     Returns:
         NDArray: edited image with overlay applied
     """
-    ### Start Post Processing Current Image ###
-    print("\nProcessing Image...")
+    print("Processing Image...")
+
     # Add Timestamp
     off_x, off_y = (50, 50)
     draw_text(img, tstmp, pos=(off_x, off_y))
@@ -132,7 +138,9 @@ def proc_img(img: NDArray, tstmp: str):
     # Add info panel
         # Number of days since last watering
 
-    #### End Post Processing Current Image ####
+    # Save Image to a file
+    cv2.imwrite(name, img)
+
     return img
 
 def draw_text(img: NDArray,

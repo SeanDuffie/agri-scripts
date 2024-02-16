@@ -4,35 +4,22 @@ Docstring for camera.py.
 """
 
 import datetime
+import logging
 import os
 import sys
-
-import cv2
+import time
 
 import collect
 
-### Start Initial Setup ###
-# Versions
-print("Version Diagnostics:")
-print("OS type: ", os.name)
-print("Platform: ", sys.platform)
-
-# Acquire initial data
-NOW = datetime.datetime.now()
-M = NOW.strftime("%m")
-D = NOW.strftime("%d")
-H = NOW.strftime("%H")
-TIMESTAMP = NOW.strftime("%Y-%m-%d_%Hh")
-asleep = True
-if int(H) > collect.ACTIVE_START and int(H) < collect.ACTIVE_STOP:
-    asleep = False
-print("Current time: ", NOW)
-print()
+# Initial Logger Settings
+FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| %(message)s"
+logging.basicConfig(format=FMT_MAIN, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 # Define Path names
 RTDIR = os.getcwd()
 DATASET = RTDIR + "/data/AeroGarden1/"
 IMGDIR = DATASET + "/autocaps/"
+IMG_SIZE = (1920, 1080)                     # video resolution
 
 # If autocaps or data don't exist, create them! They are gitignored...
 if not os.path.exists(DATASET):
@@ -40,44 +27,80 @@ if not os.path.exists(DATASET):
 if not os.path.exists(IMGDIR):
     os.makedirs(IMGDIR)
 
-IMG_NAME = f"{IMGDIR}{TIMESTAMP}.jpg"            # image name
-IMG_SIZE = (1920, 1080)                     # video resolution
 
-print("Root: ", RTDIR)
-print("Current Dataset: ", DATASET)
-print("Output Image: ", IMG_NAME)
-print()
-#### End Initial Setup ####
-
-
-def collect_data(sensors: bool = True, camera: bool = True):
+def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = True):
     """_summary_
     """
+    # Acquire initial data
+    logging.info("Current time: %s", now)
+    timestamp = now.strftime("%Y-%m-%d_%Hh")
+    img_name = f"{IMGDIR}{timestamp}.jpg"            # image name
+
+    logging.info("Output Image: %s", img_name)
+
     if sensors:
         ### Start Acquire Sensor Measurements ###
         data = collect.acq_data(DATASET)
         new_dat = collect.acq_sensors()
         it = len(data["Date"])
         # TODO: Add code to process watering
-        data = collect.app_dat(TIMESTAMP,it,M,D,H,0,data,new_dat)
+        data = collect.app_dat(now,it,0,data,new_dat)
         # CSV output
         # Pandas Method
+        # TODO: Replace with SQL
         data.to_csv(path_or_buf=DATASET+"dat.csv",header=True,index=False)
-        print(f"{data=}")
-        print()
+        logging.info(f"{data=}")
         #### End Acquire Sensor Measurements ####
 
     if camera:
-        ### Start Acquire Image ###
-        cur_img = collect.acq_img(raw_size=IMG_SIZE, flash=True, asleep=asleep)     # Capture Image
-        cur_img = collect.proc_img(img=cur_img, tstmp=TIMESTAMP)                    # Process Image
-        cv2.imwrite(IMG_NAME, cur_img)                                              # Save Image
-        #### End Acquire Image ####
+        collect.acq_img(tstmp=now,
+                        raw_size=IMG_SIZE,
+                        flash=True,
+                        name=img_name)  # Capture Image
 
-# def scheduler():
-#     while True:
-#         if 
-#         time.sleep(1)
+    logging.info("Scan Finished for %s", timestamp)
+
+def scheduler(camera: bool = True,
+              sensors: bool = True,
+              interval: datetime.timedelta | None = None,
+              round_down: bool = True) -> bool:
+    """_summary_
+
+    Args:
+        camera (bool, optional): _description_. Defaults to True.
+        sensors (bool, optional): _description_. Defaults to True.
+        interval (datetime.timedelta | None, optional): _description_. Defaults to None.
+        round_down (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        bool: _description_
+    """
+    # Set the default time interval between collections
+    if interval is None:
+        interval = datetime.timedelta(hours=1)
+
+    # Set the time of the last scan
+    last_scan = datetime.datetime.now()
+    # If the scan happend part way through the hour, determine if it should be rounded down
+    if round_down:
+        last_scan = last_scan.replace(minute=0, second=0, microsecond=0)
+    collect_data(last_scan, camera=camera, sensors=sensors)
+
+    # Main program loop
+    while True:
+        if datetime.datetime.now() > last_scan + interval:
+            # Update the most recent timestamp
+            last_scan = datetime.datetime.now()
+            collect_data(last_scan, camera=camera, sensors=sensors)
+        else:
+            time.sleep(1)
 
 if __name__ == "__main__":
-    sys.exit(collect_data())
+    logging.info("Version Diagnostics:")
+    logging.info("OS type: %s", os.name)
+    logging.info("Platform: %s\n", sys.platform)
+
+    logging.info("Root Directory: %s", RTDIR)
+    logging.info("Current Dataset: %s", DATASET)
+
+    sys.exit(scheduler(sensors=False))

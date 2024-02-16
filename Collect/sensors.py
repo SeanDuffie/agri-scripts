@@ -9,6 +9,7 @@
     FIXME: Loading up existing data takes time and only increases as more points are collected,
             figure out a way to do this faster or without loading everthing
 """
+import datetime
 import json
 import os
 
@@ -118,7 +119,7 @@ def acq_data(dirname: str) -> pd.DataFrame:
 
     return d_frame
 
-def app_dat(date: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
+def app_dat(date: datetime.datetime, it: int, w: int, df: pd.DataFrame, new_dat: pd.DataFrame) -> pd.DataFrame:
     """ Process and Store the new data
 
     FIXME: Research better insertion methods (SQL?)
@@ -126,9 +127,6 @@ def app_dat(date: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame
     Args:
         date (str): Date of the image, filename and/or timestamp
         it (int): iterator
-        m (int): month
-        d (int): day
-        h (int): hour
         w (bool): Whether water was added or not
         df (pd.DataFrame): original dataframe
         new_dat (pd.DataFrame): new dataframe entry
@@ -137,7 +135,6 @@ def app_dat(date: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame
         pd.DataFrame: New dataframe with additional entry appended
     """
 
-    # 
     print("Appending New Data..")
     day_wat: int = 0
     amt_wat: int = 0
@@ -156,9 +153,6 @@ def app_dat(date: str, it: int, m: int, d: int, h: int, w: int, df: pd.DataFrame
     # Package and append new dataframe entry
     new_row = [
         date,
-        m,
-        d,
-        h,
         new_dat[0],
         new_dat[1],
         new_dat[2],
