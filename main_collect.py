@@ -12,7 +12,7 @@ import time
 import collect
 
 # Initial Logger Settings
-FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| %(message)s"
+FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| Main_Collect:\t%(message)s"
 logging.basicConfig(format=FMT_MAIN, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 # Define Path names
@@ -62,7 +62,7 @@ def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = Tr
 
 def scheduler(camera: bool = True,
               sensors: bool = True,
-              interval: datetime.timedelta | None = None,
+              interval: datetime.timedelta = None,
               round_down: bool = True) -> bool:
     """_summary_
 
