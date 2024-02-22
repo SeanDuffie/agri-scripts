@@ -64,32 +64,32 @@ def acq_img(tstmp: datetime.datetime,
     if RPI:
         if BIT64:
             print("Using 64 bit PiCamera2")
-            picam2 = Picamera2()
-            capture_config = picam2.create_still_configuration(
-                main={
-                    "size": raw_size,
-                    "format": "RGB888"
-                }
-            )
-            picam2.start(config=capture_config)
-            time.sleep(2) # wait for camera to focus
-
-            ## Capture image and stop
-            # metadata = picam2.capture_metadata()
-            cur_img = picam2.capture_array()
-            cur_img = cv2.resize(cur_img, img_size)
-        # If 32 bit Raspberry Pi
-        else:
-            print("Using 32 bit PiCamera")
-            with PiCamera() as camera:
-                camera.resolution = img_size
-                camera.framerate = 24
-                # camera.start_preview()
+            with Picamera2() as picam2:
+                capture_config = picam2.create_still_configuration(
+                    main={
+                        "size": raw_size,
+                        "format": "RGB888"
+                    }
+                )
+                picam2.start(config=capture_config)
                 time.sleep(2) # wait for camera to focus
 
                 ## Capture image and stop
-                camera.capture(cur_img, 'rgb')
-                # camera.stop_preview()
+                # metadata = picam2.capture_metadata()
+                cur_img = picam2.capture_array()
+                cur_img = cv2.resize(cur_img, img_size)
+        # If 32 bit Raspberry Pi
+        else:
+            print("Using 32 bit PiCamera")
+            with PiCamera() as picam:
+                picam.resolution = img_size
+                picam.framerate = 24
+                # picam.start_preview()
+                time.sleep(2) # wait for picam to focus
+
+                ## Capture image and stop
+                picam.capture(cur_img, 'rgb')
+                # picam.stop_preview()
     # If using USB camera (Windows)
     else:
         print("Using OpenCV VideoCapture")
