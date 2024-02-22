@@ -12,17 +12,18 @@ from tkinter import filedialog
 
 import cv2
 
+# Initial Logger Settings
+FMT_MAIN: str = "%(asctime)s | %(levelname)s\t| Timelapse:\t\t%(message)s"
+logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
+                datefmt="%Y-%m-%D %H:%M:%S")
+
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
+
 
 class Timelapse:
     """_summary_
     """
     def __init__(self, path: str = ""):
-        # Initial Logger Settings
-        fmt_main: str = "%(asctime)s | %(levelname)s\t| ImgMod:\t%(message)s"
-        logging.basicConfig(format=fmt_main, level=logging.INFO,
-                        datefmt="%Y-%m-%D %H:%M:%S")
-
         # Validate Path
         if path == "" or not os.path.exists(path):
             path = filedialog.askdirectory(

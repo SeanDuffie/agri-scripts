@@ -14,6 +14,11 @@ import pandas as pd
 
 RTDIR: str = os.getcwd()
 
+# Initial Logger Settings
+FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| Database:\t%(message)s"
+logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
+            datefmt="%Y-%m-%d %H:%M:%S")
+
 class Database:
     """_summary_
     """
@@ -21,11 +26,6 @@ class Database:
         """
         TODO: Dataframe or path?
         """
-        # Initial Logger Settings
-        fmt_main = "%(asctime)s\t| %(levelname)s\t| %(message)s"
-        logging.basicConfig(format=fmt_main, level=logging.INFO,
-                    datefmt="%Y-%m-%d %H:%M:%S")
-
         # Validate Path
         if path == "" or not os.path.exists(path):
             logging.info("Path blank, use tkinter dialog to pick.")
