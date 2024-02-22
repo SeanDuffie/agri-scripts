@@ -4,7 +4,7 @@
                 data from database.
 
     This is configured
-    
+
     TODO: Incorporate SQL into the database interaction
     FIXME: Loading up existing data takes time and only increases as more points are collected,
             figure out a way to do this faster or without loading everthing
@@ -17,6 +17,7 @@ import pandas as pd
 
 from .constants import RPI
 
+
 if RPI:
     import board
     import digitalio
@@ -24,17 +25,6 @@ if RPI:
 
     from .mcp_3008 import MCP3008
 
-    spi = board.SPI()
-    cs = digitalio.DigitalInOut(board.D7)
-    bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
-    bme280.sea_level_pressure = 1013.4
-
-    adc = MCP3008()
-
-smin = 1024
-lmin = 1024
-smax = 0
-lmax = 0
 
 def acq_sensors() -> list():
     """ Read in sensor data from RPI sensors
@@ -52,15 +42,26 @@ def acq_sensors() -> list():
 
     # Update MCP3008 ADC Values
     if RPI:
+        spi = board.SPI()
+        cs = digitalio.DigitalInOut(board.D7)
+        bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
+        bme280.sea_level_pressure = 1013.4
+
+        adc = MCP3008()
+
+        smin = 1024
+        lmin = 1024
+        smax = 0
+        lmax = 0
+
         soil_adc = 1024 - adc.read(0)
         light_adc = adc.read(1)
 
-    # # Adjust percentage
-    # soil = 100*(soil_adc-smin)/(smax-smin+1)
-    # light = 100*(light_adc-lmin)/(lmax-lmin+1)
+        # # Adjust percentage
+        # soil = 100*(soil_adc-smin)/(smax-smin+1)
+        # light = 100*(light_adc-lmin)/(lmax-lmin+1)
 
-    # Append to list
-    if RPI:
+        # Append to list
         sensor_arr.append(soil_adc)
         sensor_arr.append(light_adc)
         sensor_arr.append(bme280.temperature)
