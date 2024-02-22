@@ -64,3 +64,11 @@ Flask Server:
         # Launch the server automatically on startup
         # Add this line to crontab -e
         @reboot python3 /{path-to-project}/Flask/server.py
+
+## Profiling
+
+    https://www.turing.com/kb/python-code-with-cprofile
+    ```
+    python -m cProfile -o program.prof .\main_collect.py
+    python -m snakeviz .\program.prof
+    ```
