@@ -30,8 +30,11 @@ class Database():
         Export to pandas dataframe
         Export to csv
         TODO: List Tables
-        TODO: Insert Row
-        TODO: Delete Row
+        Insert Row
+        Delete Row
+        TODO: Select cursor options
+            - Select Datetime range
+        FIXME: Table might need to be objectified
     """
     def __init__(self, fname: str = "my_database.db") -> None:
         """ Constructor for the database class
@@ -64,7 +67,7 @@ class Database():
             # Create a connection to the SQL database file
             con = sqlite3.connect(db_file)
             # Create a cursor
-            cur = self.con.cursor()
+            cur = con.cursor()
         except sqlite3.Error as e:
             logging.error("Failed to create connection!")
             print(e)
@@ -138,6 +141,52 @@ class Database():
             return True
         except sqlite3.Error as e:
             logging.error("Failed to drop table!")
+            print(e)
+            return False
+
+    def insert_row(self, t_name: str, row, headers: str = ""):
+        """ Inserts a row into the specified table
+
+        TODO: Add Error handling for validating the row format
+        TODO: [Maybe?] Add a check to make sure there isn't duplicate data
+
+        Args:
+            t_name (str): Name of the table to be modified
+            row (list): Row to be appended to the table
+
+        Returns:
+            bool: Success
+        """
+        sql_format = f"INSERT INTO {t_name} {headers} VALUES {row}"
+        try:
+            self.cursor.execute(sql_format)
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            logging.error("Failed insert row into table %s!", t_name)
+            print(e)
+            return False
+
+    def delete_row(self, t_name: str, index: int):
+        """ Deletes row at specified index
+        
+        TODO: Add error handling for certain index exceptions
+        TODO: Add ability to delete by datetime
+
+        Args:
+            t_name (str): Name of the table to be modified
+            index (int): index of the row to be deleted
+
+        Returns:
+            bool: Success
+        """
+        sql_format = f"DELETE FROM {t_name} WHERE 'index' = {index}"
+        try:
+            self.cursor.execute(sql_format)
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            logging.error("Failed delete row from table %s at index %d!", t_name, index)
             print(e)
             return False
 
@@ -238,18 +287,42 @@ def clean_old_set():
     print(dat)
 
 if __name__ == "__main__":
+    # Initialize Database
     db = Database(fname="test.db")
 
-    df1 = pd.read_csv(filepath_or_buffer="./dat_aerogarden.csv")
-    db.df_to_table(df1, "AeroGarden")
-    print(db.get_df("AeroGarden"))
+    # Drop existing table for testing purposes
+    db.drop_table("AeroGarden")
 
+    # Read data from old csv and populate table all at once
+    df1 = pd.read_csv(filepath_or_buffer="./dat_aerogarden.csv")
+    start = datetime.datetime.now()
+    db.df_to_table(df=df1, t_name="AeroGarden")
+    stop = datetime.datetime.now()
+    # print(db.get_df("AeroGarden"))
+    elapsed = stop-start
+    count = df1.shape[0]
+    print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
+
+    # Drop existing table for testing purposes
+    db.drop_table("palm")
+
+    # Read data from old csv and populate table one row at a time (significantly slower)
     table = [
         ("Date", "text", ""),
         ("Soil Moisture", "text", ""),
         ("Light Intensity", "text", ""),
         ("Temperature", "text", ""),
-        ("Humidity" "text", "")
+        ("Humidity", "text", "")
     ]
     db.create_table("palm", table)
     df2 = pd.read_csv(filepath_or_buffer="./dat_palm.csv")
+    # keys = f"{df2.keys().to_list()}".replace("[","(").replace("]",")").replace("'","")
+    start = datetime.datetime.now()
+    for pd_row in df2.itertuples(index=True, name=None):
+        db.insert_row(t_name="palm", row=pd_row)
+    stop = datetime.datetime.now()
+    # print(db.get_df("palm"))
+
+    elapsed = stop-start
+    count = df2.shape[0]
+    print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
