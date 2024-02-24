@@ -8,14 +8,21 @@
     # TODO: USB control for flash
     # https://stackoverflow.com/questions/59772765/how-to-turn-usb-port-power-on-and-off-in-raspberry-pi-4
 """
+<<<<<<<< HEAD:collect/camera.py
 import datetime
+========
+>>>>>>>> origin/sql:Collect/camera.py
 import time
 
 import cv2
 import numpy as np
 from numpy.typing import NDArray
 
+<<<<<<<< HEAD:collect/camera.py
 from .constants import ACTIVE_START, ACTIVE_STOP, BIT64, RPI
+========
+from .constants import BIT64, RPI
+>>>>>>>> origin/sql:Collect/camera.py
 from .webhook import post_webhook
 
 if RPI:
@@ -33,11 +40,15 @@ URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxs
 URL_OFF = 'https://maker.ifttt.com/trigger/sleep_plants/with/key/RKAAitopP0prnKOxsyr-5'
 
 
+<<<<<<<< HEAD:collect/camera.py
 def acq_img(tstmp: datetime.datetime,
             name: str,
             raw_size: tuple = (3280, 2465),
             img_size: tuple = (1920, 1080),
             flash: bool = False):
+========
+def acq_img(raw_size: tuple = (3280, 2465), img_size: tuple = (1920, 1080), flash: bool = False, asleep: bool = False):
+>>>>>>>> origin/sql:Collect/camera.py
     """ Grabs the image from the local camera system
 
     This function has support for the old 32 bit PiCamera library, 64 bit PiCamera2, and the
@@ -59,6 +70,7 @@ def acq_img(tstmp: datetime.datetime,
     if flash:
         # Enable flash - using webhook for now
         post_webhook(URL_ON)                        # Turn on Lamp for picture
+<<<<<<<< HEAD:collect/camera.py
 
     # If 64 bit Raspberry Pi
     if RPI:
@@ -90,6 +102,39 @@ def acq_img(tstmp: datetime.datetime,
                 ## Capture image and stop
                 picam.capture(cur_img, 'rgb')
                 # picam.stop_preview()
+========
+
+    # If 64 bit Raspberry Pi
+    if RPI:
+        if BIT64:
+            print("Using 64 bit PiCamera2")
+            picam2 = Picamera2()
+            capture_config = picam2.create_still_configuration(
+                main={
+                    "size": raw_size,
+                    "format": "RGB888"
+                }
+            )
+            picam2.start(config=capture_config)
+            time.sleep(2) # wait for camera to focus
+
+            ## Capture image and stop
+            # metadata = picam2.capture_metadata()
+            cur_img = picam2.capture_array()
+            cur_img = cv2.resize(cur_img, img_size)
+        # If 32 bit Raspberry Pi
+        else:
+            print("Using 32 bit PiCamera")
+            with PiCamera() as camera:
+                camera.resolution = img_size
+                camera.framerate = 24
+                # camera.start_preview()
+                time.sleep(2) # wait for camera to focus
+
+                ## Capture image and stop
+                camera.capture(cur_img, 'rgb')
+                # camera.stop_preview()
+>>>>>>>> origin/sql:Collect/camera.py
     # If using USB camera (Windows)
     else:
         print("Using OpenCV VideoCapture")
@@ -103,7 +148,11 @@ def acq_img(tstmp: datetime.datetime,
             print("Error! Image not read!")
         cap.release()
 
+<<<<<<<< HEAD:collect/camera.py
     if flash and not ACTIVE_START <= tstmp.hour <= ACTIVE_STOP:
+========
+    if flash and asleep:
+>>>>>>>> origin/sql:Collect/camera.py
         # Disable Flash - using webhook for now
         post_webhook(URL_OFF)                       # Turn off Lamp if Night
 
@@ -111,7 +160,11 @@ def acq_img(tstmp: datetime.datetime,
     timestamp = tstmp.strftime("%Y-%m-%d_%Hh")
     return proc_img(cur_img, timestamp, name)
 
+<<<<<<<< HEAD:collect/camera.py
 def proc_img(img: NDArray, tstmp: str, name: str):
+========
+def proc_img(img: NDArray, tstmp: str):
+>>>>>>>> origin/sql:Collect/camera.py
     """ Processes the image and applies edits
 
     Args:

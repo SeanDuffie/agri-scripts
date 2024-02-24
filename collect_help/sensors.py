@@ -4,12 +4,19 @@
                 data from database.
 
     This is configured
+<<<<<<<< HEAD:collect/sensors.py
 
+========
+    
+>>>>>>>> origin/sql:Collect/sensors.py
     TODO: Incorporate SQL into the database interaction
     FIXME: Loading up existing data takes time and only increases as more points are collected,
             figure out a way to do this faster or without loading everthing
 """
+<<<<<<<< HEAD:collect/sensors.py
 import datetime
+========
+>>>>>>>> origin/sql:Collect/sensors.py
 import json
 import os
 
@@ -17,14 +24,31 @@ import pandas as pd
 
 from .constants import RPI
 
+<<<<<<<< HEAD:collect/sensors.py
 
+========
+>>>>>>>> origin/sql:Collect/sensors.py
 if RPI:
     import board
     import digitalio
     from adafruit_bme280 import basic as adafruit_bme280
+<<<<<<<< HEAD:collect/sensors.py
+========
+
+    from .mcp_3008 import MCP3008
+>>>>>>>> origin/sql:Collect/sensors.py
 
     from .mcp_3008 import MCP3008
 
+<<<<<<<< HEAD:collect/sensors.py
+========
+    adc = MCP3008()
+
+smin = 1024
+lmin = 1024
+smax = 0
+lmax = 0
+>>>>>>>> origin/sql:Collect/sensors.py
 
 def acq_sensors() -> list():
     """ Read in sensor data from RPI sensors
