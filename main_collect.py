@@ -11,14 +11,17 @@ import time
 
 import collect
 
+from database import Database
+
 # Initial Logger Settings
 FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| Main_Collect:\t%(message)s"
 logging.basicConfig(format=FMT_MAIN, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 # Define Path names
 RTDIR = os.getcwd()
-DATASET = RTDIR + "/data/AeroGarden1/"
-IMGDIR = DATASET + "/autocaps/"
+SAMPLE_NAME = "AeroGarden1"
+DATASET = f"{RTDIR}/data/{SAMPLE_NAME}/"
+IMGDIR = f"{DATASET}/autocaps/"
 IMG_SIZE = (1920, 1080)                     # video resolution
 
 # If autocaps or data don't exist, create them! They are gitignored...
@@ -26,6 +29,16 @@ if not os.path.exists(DATASET):
     os.makedirs(DATASET)
 if not os.path.exists(IMGDIR):
     os.makedirs(IMGDIR)
+
+columns = [
+    ("Date", "text", ""),
+    ("Soil Moisture", "text", ""),
+    ("Light Intensity", "text", ""),
+    ("Temperature", "text", ""),
+    ("Humidity", "text", "")
+]
+DB = Database("dat.db", DATASET)
+DB.create_table(t_name=SAMPLE_NAME, cols=columns)
 
 
 def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = True):

@@ -11,14 +11,11 @@ import sys
 from tkinter import filedialog
 
 import cv2
-<<<<<<<< HEAD:process/timelapse.py
 
 # Initial Logger Settings
 FMT_MAIN: str = "%(asctime)s | %(levelname)s\t| Timelapse:\t\t%(message)s"
 logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
                 datefmt="%Y-%m-%D %H:%M:%S")
-========
->>>>>>>> origin/sql:Process/timelapse.py
 
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
 
