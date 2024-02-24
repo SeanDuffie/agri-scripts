@@ -144,6 +144,16 @@ class Database():
             print(e)
             return False
 
+    def list_tables(self):
+        """ Lists all tables currently present in the database """
+        sql_format = "SELECT name FROM sqlite_master WHERE type='table';"
+        try:
+            self.cursor.execute(sql_format)
+            print(self.cursor.fetchall())
+        except sqlite3.Error as e:
+            logging.error("Failed to list tables!")
+            print(e)
+
     def insert_row(self, t_name: str, row, headers: str = ""):
         """ Inserts a row into the specified table
 
@@ -291,6 +301,7 @@ if __name__ == "__main__":
     db = Database(fname="test.db")
 
     # Drop existing table for testing purposes
+    db.list_tables()
     db.drop_table("AeroGarden")
 
     # Read data from old csv and populate table all at once
@@ -326,3 +337,4 @@ if __name__ == "__main__":
     elapsed = stop-start
     count = df2.shape[0]
     print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
+    db.list_tables()
