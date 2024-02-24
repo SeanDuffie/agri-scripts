@@ -11,6 +11,8 @@ import cv2
 
 import collect
 
+from .database_sql import Database
+
 ### Start Initial Setup ###
 # Versions
 print("Version Diagnostics:")
@@ -31,8 +33,9 @@ print()
 
 # Define Path names
 RTDIR = os.getcwd()
-DATASET = RTDIR + "/data/AeroGarden1/"
-IMGDIR = DATASET + "/autocaps/"
+SAMPLE_NAME = "AeroGarden1"
+DATASET = f"{RTDIR}/data/{SAMPLE_NAME}/"
+IMGDIR = f"{DATASET}/autocaps/"
 
 # If autocaps or data don't exist, create them! They are gitignored...
 if not os.path.exists(DATASET):
@@ -53,6 +56,9 @@ print()
 def collect_data(sensors: bool = True, camera: bool = True):
     """_summary_
     """
+    db = Database("dat.db", DATASET)
+    db.create_table(t_name=SAMPLE_NAME)
+
     if sensors:
         ### Start Acquire Sensor Measurements ###
         data = collect.acq_data(DATASET)

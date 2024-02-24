@@ -36,7 +36,7 @@ class Database():
             - Select Datetime range
         FIXME: Table might need to be objectified
     """
-    def __init__(self, fname: str = "my_database.db") -> None:
+    def __init__(self, f_name: str = "my_database.db", f_path: str = "./") -> None:
         """ Constructor for the database class
         
         The SQLite3 connection and cursor are both constructed on initial setup, but if
@@ -46,7 +46,9 @@ class Database():
             fname (str): filename for the database to store to and read from
         """
         # Generate the connection to the database file, if there is no file then create a new one
-        self.con, self.cursor = self.create_connection(db_file=fname)
+        self.f_name = f_name
+        self.f_path = f_path
+        self.con, self.cursor = self.create_connection(db_file=f"{f_path}{f_name}")
         if self.con is None or self.cursor is None:
             logging.error("Failed to make connection!")
 
@@ -298,7 +300,7 @@ def clean_old_set():
 
 if __name__ == "__main__":
     # Initialize Database
-    db = Database(fname="test.db")
+    db = Database(f_name="test.db")
 
     # Drop existing table for testing purposes
     db.list_tables()
