@@ -2,6 +2,7 @@
     @author Sean Duffie
     @brief A Python SQL wrapper class
 """
+import datetime
 import logging
 import sqlite3
 
@@ -13,89 +14,90 @@ import pandas as pd
 # COL: TypeAlias = Dict[]
 
 # Initial Logger Settings
-FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| %(message)s"
+FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| DATABASE: %(message)s"
 logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
             datefmt="%Y-%m-%d %H:%M:%S")
 
 
 class Database():
     """ This class serves as a wrapper for my SQL database.
-
-        
-
+    
+        Create Connection
+        Create Table
+            from dataframe
+            from headers
+        Delete Table
+        Export to pandas dataframe
+        Export to csv
+        TODO: List Tables
+        TODO: Insert Row
+        TODO: Delete Row
     """
-    def __init__(self, fname: str, tname: str, cols) -> None:
-        self.con = self.create_connection(db_file=fname)
+    def __init__(self, fname: str = "my_database.db") -> None:
+        """ Constructor for the database class
+        
+        The SQLite3 connection and cursor are both constructed on initial setup, but if
+        close() is ever called then it must be reopened using create_connection() later on.
 
-        if self.con is None:
+        Args:
+            fname (str): filename for the database to store to and read from
+        """
+        # Generate the connection to the database file, if there is no file then create a new one
+        self.con, self.cursor = self.create_connection(db_file=fname)
+        if self.con is None or self.cursor is None:
             logging.error("Failed to make connection!")
 
-        if not self.create_table(self.con, tname, cols=cols):
-            logging.error("Failed to create table!")
 
-        # Create a cursor
-        self.cursor = self.con.cursor()
-
-    def create_connection(self, db_file: str = "my_database.sqlite") -> sqlite3.Connection:
-        """_summary_
+    def create_connection(self, db_file: str = "my_database.db") -> sqlite3.Connection:
+        """ Creates the connection with the sqlite database file
 
         Args:
             db_file (str, optional): the name of the file that will contain the database.
-                                        Defaults to "my_database.sqlite".
+                                        Defaults to "my_database.db".
 
         Returns:
-            _type_: _description_
+            sqlite3.Connection: The sqlite object that interacts with the database
         """
-        conn = None
+        con = None
 
         try:
             # Create a connection to the SQL database file
-            conn = sqlite3.connect(db_file)
+            con = sqlite3.connect(db_file)
+            # Create a cursor
+            cur = self.con.cursor()
         except sqlite3.Error as e:
+            logging.error("Failed to create connection!")
             print(e)
 
-        return conn
+        return con, cur
 
-    def table_from_df(self, df: pd.DataFrame, tname: str) -> bool:
-        """_summary_
+    def create_table(self, t_name: str, cols, ref: tuple | None = None) -> bool:
+        """ Create a new table from scratch with a given set of headers
 
-        Args:
-            df (pd.DataFrame): _description_
-        """
-        return df.to_sql(tname, self.con, if_exists="fail", index=True)
-
-    def get_df(self, tname: str) -> pd.DataFrame:
-        """_summary_
-
-        Args:
-            table (str): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        return pd.read_sql(f"select * from {tname}", self.con)
-
-    def create_table(self,
-                     conn: sqlite3.Connection,
-                     t_name: str,
-                     cols,
-                     ref: tuple | None = None) -> bool:
-        """_summary_
+        Example:
+            table = [
+                ("name", "text", "NOT NULL"),
+                ("begin_date", "text", ""),
+                ("end_date", "text", "")
+            ]
 
         Args:
-            conn (sqlite3.Connection): _description_.
-            t_name (str): 
+            t_name (str): table name, used to access the specific data table in the database
+            cols (list): if creating a new table, specify the header names. Defaults to None.
+            ref (tuple, optional): reference table
 
         Returns:
             bool: Was the table created successfully?
         """
         t_cols = ""
+        # Iterate through the parameter to determine what columns to add
         for i, ent in enumerate(cols):
             if i == len(cols)-1:
                 t_cols += f"{ent[0]} {ent[1]} {ent[2]}"
             else:
                 t_cols += f"{ent[0]} {ent[1]} {ent[2]},\n"
 
+        # Format the SQL string command that will be executed
         if ref is not None:
             sql_table_formatted = f"""CREATE TABLE IF NOT EXISTS {t_name} (
                                         id integer AUTO_INCREMENT PRIMARY KEY,
@@ -108,36 +110,146 @@ class Database():
                                         {t_cols}
                                     );"""
 
-        # sql_table_formatted = f"""CREATE TABLE IF NOT EXISTS {t_name} (
-        #                             id integer PRIMARY KEY,
-        #                             name text NOT NULL,
-        #                             priority integer,
-        #                             status_id integer NOT NULL,
-        #                             project_id integer NOT NULL,
-        #                             begin_date text NOT NULL,
-        #                             end_date text NOT NULL,
-        #                             FOREIGN KEY (project_id) REFERENCES projects (id)
-        #                         );"""
-
-        print(sql_table_formatted)
-
+        # Attempt to execute the specified
         try:
-            cur = conn.cursor()
-            cur.execute(sql_table_formatted)
+            self.cursor.execute(sql_table_formatted)
+            self.con.commit()
+            return True
         except sqlite3.Error as e:
+            logging.error("Failed to create table from scratch!")
             print(e)
-        # conn.commit()
+            return False
 
-        return True
+    def drop_table(self, t_name: str) -> bool:
+        """ Deletes the specified table from the database
+
+        Args:
+            t_name (str): table name designated to be deleted
+
+        Returns:
+            bool: Success or Failure
+        """
+        sql_format = f"DROP TABLE IF EXISTS {t_name};"
+
+        # Attempt to delete/drop the table, but catch any errors
+        try:
+            self.cursor.execute(sql_format)
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            logging.error("Failed to drop table!")
+            print(e)
+            return False
+
+    def df_to_table(self, df: pd.DataFrame, t_name: str) -> bool:
+        """ Save a pandas dataframe to a table in the existing database
+
+        Args:
+            df (pd.DataFrame): input pandas dataframe
+        
+        Returns:
+            bool: Success or not
+        """
+        # Attempt to create
+        try:
+            df.to_sql(t_name, self.con, if_exists="fail", index=False)
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            logging.error("Failed to create a table from dataframe!")
+            print(e)
+            return False
+
+    def get_df(self, t_name: str) -> pd.DataFrame:
+        """ Returns a pandas dataframe retrieved from the database table
+
+        TODO: add ability to control the rows/columns included in the dataframe
+
+        Args:
+            t_name (str): name of the table being requested
+
+        Returns:
+            pd.DataFrame: database populated pandas dataframe
+        """
+        return pd.read_sql(
+            sql=f"select * from {t_name}",
+            con=self.con
+        )
+        # def dt(timestamp):
+        #     return datetime.datetime.strptime(timestamp, "%Y-m-%d %H:M:S")
+        # db["Date"] = db["Date"].apply(dt, 1)
+
+    def export_csv(self, t_name: str, out_path: str = "."):
+        """ Generate a csv from a specified table
+
+        TODO: add ability to control the rows/columns going into the csv
+
+        Args:
+            t_name (str): name of the table in the database, also serves as name of output csv file
+            out_path (str, optional): location of output csv. Defaults to ".".
+        """
+        df = self.get_df(t_name=t_name)
+        df.to_csv(f"{out_path}/{t_name}.csv", header=True, index=False)
+
+    def custom_sql_command(self, cmd: str):
+        """ This is a custom function for me to test new sql functions
+
+        Args:
+            cmd (str): pre-formatted SQL string command
+
+        Returns:
+            bool: Success or failure
+        """
+        try:
+            self.cursor.execute(cmd)
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            logging.error("Custom SQL command failed!")
+            print(e)
+            return False
+
+    def close(self):
+        """ Close the connection (Usually not needed)
+            Database must call create_connection again to be usable
+        """
+        self.cursor.close()
+        self.con.close()
+
+
+def clean_old_set():
+    """ This function was used to convert the old dataset to the new Database format.
+        Shouldn't be needed anymore but is kept for reference.
+    """
+    def timeform(ts: str):
+        return datetime.datetime.strptime(ts, "%Y-%m-%d_%Hh")
+
+    dat = pd.read_csv(filepath_or_buffer="./data/palm1/dat.csv")
+    # print(dat)
+    dat = dat.drop("Month", axis=1)
+    dat = dat.drop("Day", axis=1)
+    dat = dat.drop("Hour", axis=1)
+    dat = dat.drop("Amount Watered", axis=1)
+    dat = dat.drop("Watered?", axis=1)
+    dat = dat.drop("Days without water", axis=1)
+
+    # print(dat)
+    dat["Date"] = dat["Date"].apply(timeform, 1)
+    print(dat)
 
 if __name__ == "__main__":
-    dat = pd.read_csv(filepath_or_buffer="./data/AeroGarden1/dat.csv")
+    db = Database(fname="test.db")
+
+    df1 = pd.read_csv(filepath_or_buffer="./dat_aerogarden.csv")
+    db.df_to_table(df1, "AeroGarden")
+    print(db.get_df("AeroGarden"))
 
     table = [
-        ("name", "text", "NOT NULL"),
-        ("begin_date", "text", ""),
-        ("end_date", "text", "")
+        ("Date", "text", ""),
+        ("Soil Moisture", "text", ""),
+        ("Light Intensity", "text", ""),
+        ("Temperature", "text", ""),
+        ("Humidity" "text", "")
     ]
-    db = Database(tname="tbl", fname="test.db", cols=table)
-    db.table_from_df(dat, "csv")
-    print(db.get_df("csv"))
+    db.create_table("palm", table)
+    df2 = pd.read_csv(filepath_or_buffer="./dat_palm.csv")
