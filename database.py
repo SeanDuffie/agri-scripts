@@ -27,16 +27,16 @@ class Database():
             from dataframe
             from headers
         Delete Table
+        List Tables
         Export to pandas dataframe
         Export to csv
-        TODO: List Tables
         Insert Row
         Delete Row
         TODO: Select cursor options
             - Select Datetime range
         FIXME: Table might need to be objectified
     """
-    def __init__(self, f_name: str = "my_database.db", f_path: str = "./") -> None:
+    def __init__(self, db_name: str = "my_database.db", db_path: str = "./") -> None:
         """ Constructor for the database class
         
         The SQLite3 connection and cursor are both constructed on initial setup, but if
@@ -46,14 +46,14 @@ class Database():
             fname (str): filename for the database to store to and read from
         """
         # Generate the connection to the database file, if there is no file then create a new one
-        self.f_name = f_name
-        self.f_path = f_path
-        self.con, self.cursor = self.create_connection(db_file=f"{f_path}{f_name}")
+        self.db_name = db_name
+        self.db_path = db_path
+        self.create_connection(db_file=db_name, db_path=db_path)
         if self.con is None or self.cursor is None:
             logging.error("Failed to make connection!")
 
 
-    def create_connection(self, db_file: str = "my_database.db") -> sqlite3.Connection:
+    def create_connection(self, db_file: str = "my_database.db", db_path: str = "./") -> sqlite3.Connection:
         """ Creates the connection with the sqlite database file
 
         Args:
@@ -63,18 +63,14 @@ class Database():
         Returns:
             sqlite3.Connection: The sqlite object that interacts with the database
         """
-        con = None
-
         try:
             # Create a connection to the SQL database file
-            con = sqlite3.connect(db_file)
+            self.con = sqlite3.connect(f"{db_path}{db_file}")
             # Create a cursor
-            cur = con.cursor()
+            self.cursor = self.con.cursor()
         except sqlite3.Error as e:
             logging.error("Failed to create connection!")
             print(e)
-
-        return con, cur
 
     def create_table(self, t_name: str, cols, ref: tuple | None = None) -> bool:
         """ Create a new table from scratch with a given set of headers
@@ -105,15 +101,24 @@ class Database():
         # Format the SQL string command that will be executed
         if ref is not None:
             sql_table_formatted = f"""CREATE TABLE IF NOT EXISTS {t_name} (
-                                        id integer AUTO_INCREMENT PRIMARY KEY,
                                         {t_cols},
                                         Foreign Key ({ref[0]}) REFERENCES {ref[1]} ({ref[2]})
                                     );"""
         else:
             sql_table_formatted = f"""CREATE TABLE IF NOT EXISTS {t_name} (
-                                        id integer AUTO_INCREMENT PRIMARY KEY,
                                         {t_cols}
                                     );"""
+        # if ref is not None:
+        #     sql_table_formatted = f"""CREATE TABLE IF NOT EXISTS {t_name} (
+        #                                 id integer AUTO_INCREMENT PRIMARY KEY,
+        #                                 {t_cols},
+        #                                 Foreign Key ({ref[0]}) REFERENCES {ref[1]} ({ref[2]})
+        #                             );"""
+        # else:
+        #     sql_table_formatted = f"""CREATE TABLE IF NOT EXISTS {t_name} (
+        #                                 id integer AUTO_INCREMENT PRIMARY KEY,
+        #                                 {t_cols}
+        #                             );"""
 
         # Attempt to execute the specified
         try:
@@ -149,6 +154,7 @@ class Database():
     def list_tables(self):
         """ Lists all tables currently present in the database """
         sql_format = "SELECT name FROM sqlite_master WHERE type='table';"
+
         try:
             self.cursor.execute(sql_format)
             print(self.cursor.fetchall())
@@ -170,6 +176,7 @@ class Database():
             bool: Success
         """
         sql_format = f"INSERT INTO {t_name} {headers} VALUES {row}"
+
         try:
             self.cursor.execute(sql_format)
             self.con.commit()
@@ -193,6 +200,7 @@ class Database():
             bool: Success
         """
         sql_format = f"DELETE FROM {t_name} WHERE 'index' = {index}"
+
         try:
             self.cursor.execute(sql_format)
             self.con.commit()
@@ -300,7 +308,7 @@ def clean_old_set():
 
 if __name__ == "__main__":
     # Initialize Database
-    db = Database(f_name="test.db")
+    db = Database(db_name="test.db")
 
     # Drop existing table for testing purposes
     db.list_tables()
@@ -332,6 +340,7 @@ if __name__ == "__main__":
     # keys = f"{df2.keys().to_list()}".replace("[","(").replace("]",")").replace("'","")
     start = datetime.datetime.now()
     for pd_row in df2.itertuples(index=True, name=None):
+        print(type(pd_row))
         db.insert_row(t_name="palm", row=pd_row)
     stop = datetime.datetime.now()
     # print(db.get_df("palm"))

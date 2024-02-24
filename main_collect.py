@@ -10,7 +10,6 @@ import sys
 import time
 
 import collect
-
 from database import Database
 
 # Initial Logger Settings
@@ -32,13 +31,15 @@ if not os.path.exists(IMGDIR):
 
 columns = [
     ("Date", "text", ""),
-    ("Soil Moisture", "text", ""),
-    ("Light Intensity", "text", ""),
-    ("Temperature", "text", ""),
-    ("Humidity", "text", "")
+    # ("IMG Path", "text", ""),
+    ("Soil_Moisture", "int", ""),
+    ("Light_Intensity", "int", ""),
+    ("Temperature", "float", ""),
+    ("Humidity", "float", "")
 ]
 DB = Database("dat.db", DATASET)
 DB.create_table(t_name=SAMPLE_NAME, cols=columns)
+DB.close()
 
 
 def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = True):
@@ -50,19 +51,14 @@ def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = Tr
     img_name = f"{IMGDIR}{timestamp}.jpg"            # image name
 
     logging.info("Output Image: %s", img_name)
+    DB.create_connection("dat.db", DATASET)
 
     if sensors:
         ### Start Acquire Sensor Measurements ###
-        data = collect.acq_data(DATASET)
-        new_dat = collect.acq_sensors()
-        it = len(data["Date"])
-        # TODO: Add code to process watering
-        data = collect.app_dat(now,it,0,data,new_dat)
-        # CSV output
-        # Pandas Method
-        # TODO: Replace with SQL
-        data.to_csv(path_or_buf=DATASET+"dat.csv",header=True,index=False)
-        logging.info(f"{data=}")
+        # data = collect.acq_data(DATASET)
+        new_dat = collect.acq_sensors(datetime.datetime.strftime(now, "%Y-%m-%d %H:%M:%S"))
+        logging.info("New Sensor Data = %s", new_dat)
+        DB.insert_row(t_name=SAMPLE_NAME, row=new_dat)
         #### End Acquire Sensor Measurements ####
 
     if camera:
@@ -71,6 +67,7 @@ def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = Tr
                         flash=True,
                         name=img_name)  # Capture Image
 
+    DB.close()
     logging.info("Scan Finished for %s", timestamp)
 
 def scheduler(camera: bool = True,
@@ -116,4 +113,4 @@ if __name__ == "__main__":
     logging.info("Root Directory: %s", RTDIR)
     logging.info("Current Dataset: %s", DATASET)
 
-    sys.exit(scheduler(sensors=False))
+    sys.exit(scheduler(sensors=True))

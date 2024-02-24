@@ -6,5 +6,5 @@
 """
 from .camera import acq_img, proc_img
 from .constants import ACTIVE_START, ACTIVE_STOP, BIT64, RPI, SET_NAME
-from .sensors import acq_data, acq_sensors, app_dat
+from .sensors import acq_sensors
 from .webhook import post_webhook
