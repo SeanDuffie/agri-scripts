@@ -11,7 +11,7 @@ import cv2
 
 import collect
 
-from .database_sql import Database
+from .database import Database
 
 ### Start Initial Setup ###
 # Versions
