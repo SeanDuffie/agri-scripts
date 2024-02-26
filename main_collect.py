@@ -18,7 +18,7 @@ logging.basicConfig(format=FMT_MAIN, level=logging.INFO, datefmt="%Y-%m-%d %H:%M
 
 # Define Path names
 RTDIR = os.getcwd()
-SAMPLE_NAME = "AeroGarden1"
+SAMPLE_NAME = "AeroGarden2"
 DATASET = f"{RTDIR}/data/{SAMPLE_NAME}/"
 IMGDIR = f"{DATASET}/autocaps/"
 IMG_SIZE = (1920, 1080)                     # video resolution
@@ -68,7 +68,7 @@ def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = Tr
                         name=img_name)  # Capture Image
 
     DB.close()
-    logging.info("Scan Finished for %s", timestamp)
+    logging.info("Scan Finished for %s\n", timestamp)
 
 def scheduler(camera: bool = True,
               sensors: bool = True,
