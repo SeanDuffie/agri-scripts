@@ -68,56 +68,57 @@ def acq_img(tstmp: datetime.datetime,
         if not post_webhook(URL_ON):                        # Turn on Lamp for picture
             logging.error("Flash failed, possible internet outage or unplugged switch?")
 
-    # If 64 bit Raspberry Pi
-    if RPI:
-        if BIT64:
-            logging.info("Using 64 bit PiCamera2")
-            with Picamera2() as picam2:
-                capture_config = picam2.create_still_configuration(
-                    main={
-                        "size": raw_size,
-                        "format": "RGB888"
-                    }
-                )
-                picam2.start(config=capture_config)
-                time.sleep(2) # wait for camera to focus
+    # # If 64 bit Raspberry Pi
+    # if RPI:
+    #     if BIT64:
+    #         logging.info("Using 64 bit PiCamera2")
+    #         with Picamera2() as picam2:
+    #             capture_config = picam2.create_still_configuration(
+    #                 main={
+    #                     "size": img_size,
+    #                     "format": "RGB888"
+    #                 }
+    #             )
+    #             picam2.start(config=capture_config)
+    #             time.sleep(1) # wait for camera to focus
 
-                ## Capture image and stop
-                # metadata = picam2.capture_metadata()
-                cur_img = picam2.capture_array()
-                cur_img = cv2.resize(cur_img, img_size)
-        # If 32 bit Raspberry Pi
-        else:
-            logging.info("Using 32 bit PiCamera")
-            with PiCamera() as picam:
-                picam.resolution = img_size
-                picam.framerate = 24
-                # picam.start_preview()
-                time.sleep(2) # wait for picam to focus
+    #             ## Capture image and stop
+    #             # metadata = picam2.capture_metadata()
+    #             cur_img = picam2.capture_array()
+    #             cur_img = cv2.resize(cur_img, img_size)
+    #     # If 32 bit Raspberry Pi
+    #     else:
+    #         logging.info("Using 32 bit PiCamera")
+    #         with PiCamera() as picam:
+    #             picam.resolution = img_size
+    #             picam.framerate = 24
+    #             # picam.start_preview()
+    #             time.sleep(1) # wait for picam to focus
 
-                ## Capture image and stop
-                picam.capture(cur_img, 'rgb')
-                # picam.stop_preview()
-    # If using USB camera (Windows)
-    else:
-        logging.info("Using OpenCV VideoCapture")
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
-        cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
-        time.sleep(2)
-        ret, cur_img = cap.read()
-        if not ret:
-            
-            logging.error("Image not read!")
-        cap.release()
+    #             ## Capture image and stop
+    #             picam.capture(cur_img, 'rgb')
+    #             # picam.stop_preview()
+    # # If using USB camera (Windows)
+    # else:
+    logging.info("Using OpenCV VideoCapture")
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
+    # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+    cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
+    time.sleep(2)
+    print(img_size)
+    ret, cur_img = cap.read()
+    if not ret:
+        logging.error("Image not read!")
+    cap.release()
 
     if flash and not ACTIVE_START <= tstmp.hour <= ACTIVE_STOP:
         # Disable Flash - using webhook for now
         if not post_webhook(URL_OFF):                       # Turn off Lamp if Night
             logging.error("Flash failed, possible internet outage or unplugged switch?")
 
-    logging.info("Picture Acquired!\n")
+    logging.info("Picture Acquired!")
     timestamp = tstmp.strftime("%Y-%m-%d_%Hh")
     return proc_img(cur_img, timestamp, name)
 

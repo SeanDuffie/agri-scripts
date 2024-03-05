@@ -72,7 +72,7 @@ class Database():
             logging.error("Failed to create connection!")
             print(e)
 
-    def create_table(self, t_name: str, cols, ref: tuple | None = None) -> bool:
+    def create_table(self, t_name: str, cols, ref: tuple = None) -> bool:
         """ Create a new table from scratch with a given set of headers
 
         Example:
