@@ -34,8 +34,8 @@ columns = [
     # ("IMG Path", "text", ""),
     ("Soil_Moisture", "int", ""),
     ("Light_Intensity", "int", ""),
-    ("Temperature", "float", ""),
-    ("Humidity", "float", "")
+    ("Temperature", "real", ""),
+    ("Humidity", "real", "")
 ]
 DB = Database("dat.db", DATASET)
 DB.create_table(t_name=SAMPLE_NAME, cols=columns)

@@ -330,10 +330,10 @@ if __name__ == "__main__":
     # Read data from old csv and populate table one row at a time (significantly slower)
     table = [
         ("Date", "text", ""),
-        ("Soil Moisture", "text", ""),
-        ("Light Intensity", "text", ""),
-        ("Temperature", "text", ""),
-        ("Humidity", "text", "")
+        ("Soil Moisture", "integer", ""),
+        ("Light Intensity", "integer", ""),
+        ("Temperature", "real", ""),
+        ("Humidity", "real", "")
     ]
     db.create_table("palm", table)
     df2 = pd.read_csv(filepath_or_buffer="./dat_palm.csv")

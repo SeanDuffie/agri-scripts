@@ -3,7 +3,7 @@
     @brief      Module imports
 """
 from .constants import DATASET
-from .database import Database
+from .data_viz import Vizualizer
 from .timelapse import Timelapse
 
 """ Data Visualization Options
