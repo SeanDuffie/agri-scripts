@@ -9,8 +9,8 @@
     # https://stackoverflow.com/questions/59772765/how-to-turn-usb-port-power-on-and-off-in-raspberry-pi-4
 """
 import datetime
-import time
 import logging
+import time
 
 import cv2
 import numpy as np

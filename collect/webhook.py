@@ -10,6 +10,7 @@
 """
 import requests
 
+
 def post_webhook(url: str) -> bool:
     """ Posts to the specified webhook
 
