@@ -24,6 +24,7 @@ if sys.platform.startswith("linux"):
         BIT_64 = False
 else:
     print("Not Linux - Ignoring Picamera...")
+RPI = False
 
 # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)        # Windows
 cap = cv2.VideoCapture(0)                       # Linux
