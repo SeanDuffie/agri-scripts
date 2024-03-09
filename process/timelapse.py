@@ -97,20 +97,29 @@ class Timelapse:
 
         # Compile image array into a video
         logging.info("Compiling video:\t%s", vid_name)
-        vid_writer = cv2.VideoWriter(vid_name, FOURCC, fps, img_res)
-        for filename in images:
-            img = cv2.imread(img_dir + filename)  # Read in Raw image
-            vid_writer.write(img)              # writes out each frame to the video file
-        vid_writer.release()
-        logging.info("Time-Lapse Released!\n")
+        logging.info("Frame Count:\t%s", len(images))
+        try:
+            vid_writer = cv2.VideoWriter(vid_name, FOURCC, fps, img_res)
+            for filename in images:
+                img = cv2.imread(img_dir + filename)            # Read in Raw image
+                assert (img.shape[1], img.shape[0]) == img_res  # Check that the camera resolution is correct
+                vid_writer.write(img)                           # writes out each frame to the video file
+
+            vid_writer.release()
+            logging.info("Time-Lapse Released!\n")
+        except AssertionError as e:
+            print(e)
+            print(f"Camera resolution wrong... Video: {img_res} | Image: {(img.shape[1], img.shape[0])}")
+            vid_writer.release()
+            sys.exit(1)
 
 if __name__ == "__main__":# Define Path names
     tl = Timelapse()
 
     FPS = 48                                    # video fps
-    IMG_SIZE = (1920, 1080)                     # video resolution
+    IMG_SIZE = (1280, 960)                     # video resolution
 
     # Using Default FPS (24). 1sec/day
     tl.video_from_frames(img_res=IMG_SIZE)
-    # Using Custom FPS (48, faster). 0.5sec/day
-    tl.video_from_frames(img_res=IMG_SIZE, fps=FPS)
+    # # Using Custom FPS (48, faster). 0.5sec/day
+    # tl.video_from_frames(img_res=IMG_SIZE, fps=FPS)

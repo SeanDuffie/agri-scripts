@@ -4,10 +4,11 @@ import datetime
 import os
 
 import dash
-import flask
 import plotly.express as px
 from dash.dependencies import Input, Output
 from plot_dat import Dataset
+
+import flask
 
 server = flask.Flask(__name__, static_folder="static")
 app = dash.Dash(__name__, server=server)#, routes_pathname_prefix="/dash/")
