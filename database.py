@@ -72,7 +72,7 @@ class Database():
             logging.error("Failed to create connection!")
             print(e)
 
-    def create_table(self, t_name: str, cols, ref: tuple | None = None) -> bool:
+    def create_table(self, t_name: str, cols, ref: tuple = None) -> bool:
         """ Create a new table from scratch with a given set of headers
 
         Example:
@@ -330,10 +330,10 @@ if __name__ == "__main__":
     # Read data from old csv and populate table one row at a time (significantly slower)
     table = [
         ("Date", "text", ""),
-        ("Soil Moisture", "text", ""),
-        ("Light Intensity", "text", ""),
-        ("Temperature", "text", ""),
-        ("Humidity", "text", "")
+        ("Soil Moisture", "integer", ""),
+        ("Light Intensity", "integer", ""),
+        ("Temperature", "real", ""),
+        ("Humidity", "real", "")
     ]
     db.create_table("palm", table)
     df2 = pd.read_csv(filepath_or_buffer="./dat_palm.csv")
