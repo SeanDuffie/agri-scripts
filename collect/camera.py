@@ -105,8 +105,8 @@ def acq_img(tstmp: datetime.datetime,
         logging.info("Using OpenCV VideoCapture")
         # FIXME: this is throwing errors occasionally when it can't detect the web cam
         cap = cv2.VideoCapture(0)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
+        # cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
+        # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
         # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
         cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
         time.sleep(2)
@@ -153,7 +153,11 @@ def proc_img(img: NDArray, tstmp: str, name: str):
         # Number of days since last watering
 
     # Save Image to a file
-    cv2.imwrite(name, img)
+    try:
+        cv2.imwrite(name, img)
+    except AssertionError as e:
+        logging.error("BAD! Photo was empty, camera probably not initialized.")
+        print(e)
 
     return img
 
