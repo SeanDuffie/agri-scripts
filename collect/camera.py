@@ -100,18 +100,21 @@ def acq_img(tstmp: datetime.datetime,
     #             # picam.stop_preview()
     # # If using USB camera (Windows)
     # else:
-    logging.info("Using OpenCV VideoCapture")
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
-    # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-    cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
-    time.sleep(2)
-    print(img_size)
-    ret, cur_img = cap.read()
-    if not ret:
-        logging.error("Image not read!")
-    cap.release()
+    ret = False
+    while not ret:
+        logging.info("Using OpenCV VideoCapture")
+        # FIXME: this is throwing errors occasionally when it can't detect the web cam
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
+        # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+        cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
+        time.sleep(2)
+        print(img_size)
+        ret, cur_img = cap.read()
+        if not ret:
+            logging.error("Image not read! Attempting again...")
+        cap.release()
 
     if flash and not ACTIVE_START <= tstmp.hour <= ACTIVE_STOP:
         # Disable Flash - using webhook for now
