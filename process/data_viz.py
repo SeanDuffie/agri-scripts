@@ -24,23 +24,24 @@ class Vizualizer:
         """
         TODO: Dataframe or path?
         """
-        # Validate Path
-        if path == "" or not os.path.exists(path):
-            logging.info("Path blank, use tkinter dialog to pick.")
-            path = filedialog.askopenfilename(
-                title="Select Current Data File",
-                filetypes=[
-                    ("CSV Reports", "csv")
-                ],
-                initialdir=f"{RTDIR}/database/")
-            if path == "":
-                logging.error("Tkinter Filedialog cancelled.")
-                sys.exit(1)
+        # # Validate Path
+        # if path == "" or not os.path.exists(path):
+        #     logging.info("Path blank, use tkinter dialog to pick.")
+        #     path = filedialog.askopenfilename(
+        #         title="Select Current Data File",
+        #         filetypes=[
+        #             ("CSV Reports", "csv")
+        #         ],
+        #         initialdir=f"{RTDIR}/database/")
+        #     if path == "":
+        #         logging.error("Tkinter Filedialog cancelled.")
+        #         sys.exit(1)
 
 
-        logging.info("Opening file:\t%s", self.data_path)
-        # self.d_frame: pd.DataFrame = pd.DataFrame([])
-        self.d_frame: pd.DataFrame = pd.read_csv(self.data_path)
+        # logging.info("Opening file:\t%s", self.data_path)
+        # # self.d_frame: pd.DataFrame = pd.DataFrame([])
+        # self.d_frame: pd.DataFrame = pd.read_csv(self.data_path)
+        self.d_frame = dframe
         
         def timestamp2UTC(tstamp: str):
             """ Function to apply to the dataframe to convert the timestamps to plottable utc ints

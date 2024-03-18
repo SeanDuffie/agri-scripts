@@ -5,6 +5,7 @@
 import datetime
 import logging
 import sqlite3
+import sys
 
 import pandas as pd
 
@@ -71,6 +72,7 @@ class Database():
         except sqlite3.Error as e:
             logging.error("Failed to create connection!")
             print(e)
+            sys.exit()
 
     def create_table(self, t_name: str, cols, ref: tuple = None) -> bool:
         """ Create a new table from scratch with a given set of headers

@@ -2,7 +2,7 @@
     @author     Sean Duffie
     @brief      Module imports
 """
-from .constants import DATASET
+# from .constants import
 from .data_viz import Vizualizer
 from .timelapse import Timelapse
 
