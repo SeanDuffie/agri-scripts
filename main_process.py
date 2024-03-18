@@ -13,6 +13,7 @@ import sys
 import cv2
 
 import process
+from database import Database
 
 # from tkinter import filedialog
 
@@ -33,9 +34,17 @@ TIMESTAMP = NOW.strftime("%Y-%m-%d_%Hh")
 print("Current time: ", NOW)
 print()
 
+
+options = [os.path.basename(filename) for filename in os.listdir("./data")]
+print("Dataset options:")
+# print(f"({key}) {set}" for key, set in enumerate(options))
+for key, dat in enumerate(options):
+    print(f"({key}) {dat}")
+sel = int(input("Which dataset do you want to process? "))
+
 # Define Path names
 RTDIR = os.getcwd()
-DATASET = RTDIR + "/data/AeroGarden1/"
+DATASET = f"{RTDIR}/data/{options[sel]}/"
 IMGDIR = DATASET + "/autocaps/"
 
 # If autocaps or data don't exist, create them! They are gitignored...
@@ -63,25 +72,26 @@ def process_data():
         TODO: process.DATASET may be better as a command line argument or a function parameter
     """
     ### Start Post Processing Video Compilation ###
-    db = process.Database(process.DATASET)
+    db = Database(db_name="dat.db", db_path=DATASET)
+    vis = process.Vizualizer(db.get_df(options[sel]))
     ## Start Generate Plots ###
     # Plot Total Light
-    db.gen_plot(
+    vis.gen_plot(
         y_label="Light Intensity"
     )
 
     # Plot Total Soil Moisture
-    db.gen_plot(
+    vis.gen_plot(
         y_label="Soil Moisture"
     )
 
     # Plot Total Temperature
-    db.gen_plot(
+    vis.gen_plot(
         y_label="Temperature"
     )
 
     # Plot Total Humidity
-    db.gen_plot(
+    vis.gen_plot(
         y_label="Humidity"
     )
     ## End Generate Plots ##
