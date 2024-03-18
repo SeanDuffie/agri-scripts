@@ -6,8 +6,8 @@ import time
 import cv2
 
 raw_size: tuple = (3280, 2465)
-# img_size: tuple = (1920, 1080)
-img_size: tuple = (1280, 720)
+img_size: tuple = (1920, 1080)
+# img_size: tuple = (1280, 720)
 
 RPI = False
 BIT_64 = True
