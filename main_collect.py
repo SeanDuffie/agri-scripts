@@ -17,7 +17,7 @@ FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| Main_Collect:\t%(message)s"
 logging.basicConfig(format=FMT_MAIN, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 # Define Path names
-RTDIR = os.getcwd()
+RTDIR = os.path.dirname(__file__)
 SAMPLE_NAME = "AeroGarden2"
 DATASET = f"{RTDIR}/data/{SAMPLE_NAME}/"
 IMGDIR = f"{DATASET}/autocaps/"

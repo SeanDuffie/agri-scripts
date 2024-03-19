@@ -14,6 +14,7 @@ import cv2
 
 import process
 from database import Database
+import pandas as pd
 
 # from tkinter import filedialog
 
@@ -35,15 +36,16 @@ print("Current time: ", NOW)
 print()
 
 
-options = [os.path.basename(filename) for filename in os.listdir("./data")]
+# Define Path names
+RTDIR = os.path.dirname(__file__)
+
+options = [os.path.basename(filename) for filename in os.listdir(f"{RTDIR}/data")]
 print("Dataset options:")
 # print(f"({key}) {set}" for key, set in enumerate(options))
 for key, dat in enumerate(options):
     print(f"({key}) {dat}")
 sel = int(input("Which dataset do you want to process? "))
 
-# Define Path names
-RTDIR = os.getcwd()
 DATASET = f"{RTDIR}/data/{options[sel]}/"
 IMGDIR = DATASET + "/autocaps/"
 
@@ -72,30 +74,37 @@ def process_data():
         TODO: process.DATASET may be better as a command line argument or a function parameter
     """
     ### Start Post Processing Video Compilation ###
+    print("Loading Database")
     db = Database(db_name="dat.db", db_path=DATASET)
-    vis = process.Vizualizer(db.get_df(options[sel]))
-    ## Start Generate Plots ###
-    # Plot Total Light
-    vis.gen_plot(
-        y_label="Light Intensity"
-    )
+    try:
+        print("Starting Graphs")
+        vis = process.Vizualizer(db.get_df(options[sel]))
+        ## Start Generate Plots ###
+        # Plot Total Light
+        vis.gen_plot(
+            y_label="Light Intensity"
+        )
 
-    # Plot Total Soil Moisture
-    vis.gen_plot(
-        y_label="Soil Moisture"
-    )
+        # Plot Total Soil Moisture
+        vis.gen_plot(
+            y_label="Soil Moisture"
+        )
 
-    # Plot Total Temperature
-    vis.gen_plot(
-        y_label="Temperature"
-    )
+        # Plot Total Temperature
+        vis.gen_plot(
+            y_label="Temperature"
+        )
 
-    # Plot Total Humidity
-    vis.gen_plot(
-        y_label="Humidity"
-    )
-    ## End Generate Plots ##
+        # Plot Total Humidity
+        vis.gen_plot(
+            y_label="Humidity"
+        )
+        ## End Generate Plots ##
+    except pd.errors.DatabaseError as e:
+        print("Failed to open table")
+        print(e)
 
+    print("Starting Timelapse")
     tl = process.Timelapse(VID_NAME)
     tl.video_from_frames(img_res=IMG_SIZE, fps=FPS)
     #### End Post Processing Video Compilation ####

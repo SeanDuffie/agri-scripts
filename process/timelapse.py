@@ -102,6 +102,7 @@ class Timelapse:
             vid_writer = cv2.VideoWriter(vid_name, FOURCC, fps, img_res)
             for filename in images:
                 img = cv2.imread(img_dir + filename)            # Read in Raw image
+                # FIXME: This assertion is unnecessarily breaking the code, maybe try a softer warning
                 # assert (img.shape[1], img.shape[0]) == img_res  # Check that the camera resolution is correct
                 vid_writer.write(img)                           # writes out each frame to the video file
 

@@ -242,13 +242,13 @@ class Database():
         Returns:
             pd.DataFrame: database populated pandas dataframe
         """
-        return pd.read_sql(
+        df = pd.read_sql(
             sql=f"select * from {t_name}",
             con=self.con
         )
-        # def dt(timestamp):
-        #     return datetime.datetime.strptime(timestamp, "%Y-m-%d %H:M:S")
-        # db["Date"] = db["Date"].apply(dt, 1)
+        df['Date'] = pd.to_datetime(df['Date'])
+
+        return df
 
     def export_csv(self, t_name: str, out_path: str = "."):
         """ Generate a csv from a specified table
