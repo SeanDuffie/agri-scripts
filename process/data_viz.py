@@ -52,6 +52,7 @@ class Vizualizer:
             Returns:
                 int: utc value, seconds passed since 1970.
             """
+            # TODO: do the to_datetime thing
             dt = datetime.datetime.strptime(tstamp, "%Y-%m-%d_%Hh")
             utc = int(datetime.datetime.timestamp(dt))
             return utc
