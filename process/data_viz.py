@@ -23,8 +23,9 @@ logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
 class Vizualizer:
     """_summary_
     """
-    def __init__(self, dframe: pd.DataFrame):
+    def __init__(self, dframe: pd.DataFrame, out_path: str = "./"):
         self.d_frame = dframe
+        self.out_path = out_path
 
     def gen_plot(self, y_label: str, x_label: str = "Date", title: str = "", start: int=0, stop: int=-1):
         """_summary_
@@ -39,7 +40,7 @@ class Vizualizer:
         Returns:
             _type_: _description_
         """
-        y_label = y_label.replace(" ", "_")
+        # y_label = y_label.replace(" ", "_")
         # Determine the end of the dataset sample
         SEG = True
         if stop == -1:
@@ -75,7 +76,7 @@ class Vizualizer:
         plt.xticks(rotation=15)
         # plt.xticks(ticks=h_ticks, labels=d_ticks)
         plt.ylabel(y_label)
-        plt.savefig(f"./{title}.png")
+        plt.savefig(f"{self.out_path}{title}.png")
         plt.close()
 
     def gen_scatter(self):

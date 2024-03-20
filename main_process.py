@@ -55,15 +55,11 @@ if not os.path.exists(DATASET):
 if not os.path.exists(IMGDIR):
     os.makedirs(IMGDIR)
 
-VID_NAME = f"{DATASET}time-lapse.mp4"      # video name
-FOURCC = cv2.VideoWriter_fourcc(*'mp4v')    # video format
 FPS = 24                                    # video fps
-RAW_SIZE = (3280, 2465)                     # camera resolution
 IMG_SIZE = (1920, 1080)                     # video resolution
 
 print("Root: ", RTDIR)
 print("Current Dataset: ", DATASET)
-print("Output Video: ", VID_NAME)
 print()
 #### End Initial Setup ####
 
@@ -77,8 +73,11 @@ def process_data():
     print("Loading Database")
     db = Database(db_name="dat.db", db_path=DATASET)
     try:
+        df = db.get_df(options[sel])
+
         print("Starting Graphs")
-        vis = process.Vizualizer(db.get_df(options[sel]))
+        vis = process.Vizualizer(dframe=df, out_path=DATASET)
+
         ## Start Generate Plots ###
         # Plot Total Light
         vis.gen_plot(
@@ -99,13 +98,16 @@ def process_data():
         vis.gen_plot(
             y_label="Humidity"
         )
-        ## End Generate Plots ##
+    ## End Generate Plots ##
     except pd.errors.DatabaseError as e:
         print("Failed to open table")
         print(e)
 
+
     print("Starting Timelapse")
-    tl = process.Timelapse(VID_NAME)
+    tl = process.Timelapse(path=DATASET)
+    # TODO: Append frames to save time instead of compiling the whole video
+    # if os.path.exists(f"{DATASET}")
     tl.video_from_frames(img_res=IMG_SIZE, fps=FPS)
     #### End Post Processing Video Compilation ####
 
