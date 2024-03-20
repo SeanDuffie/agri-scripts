@@ -87,7 +87,7 @@ class Timelapse:
             fps (int, optional): output FPS, higher is smoother but shorter. Defaults to 24.
         """
         # Read in current directory of images
-        img_dir = f"{self.path}/autocaps/"
+        img_dir = f"{os.path.dirname(self.path)}/autocaps/"
         vid_name = f"{self.path}/{self.set_name}_timelapse_{fps}fps.mp4"
         logging.info("Reading in Images:\t%s", img_dir)
 
