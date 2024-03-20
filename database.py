@@ -288,14 +288,14 @@ class Database():
         self.con.close()
 
 
-def clean_old_set():
+def clean_old_set(csv_dir: str):
     """ This function was used to convert the old dataset to the new Database format.
         Shouldn't be needed anymore but is kept for reference.
     """
     def timeform(ts: str):
         return datetime.datetime.strptime(ts, "%Y-%m-%d_%Hh")
 
-    dat = pd.read_csv(filepath_or_buffer="./data/palm1/dat.csv")
+    dat = pd.read_csv(filepath_or_buffer=f"{csv_dir}/dat.csv")
     # print(dat)
     dat = dat.drop("Month", axis=1)
     dat = dat.drop("Day", axis=1)
@@ -304,50 +304,54 @@ def clean_old_set():
     dat = dat.drop("Watered?", axis=1)
     dat = dat.drop("Days without water", axis=1)
 
-    # print(dat)
     dat["Date"] = dat["Date"].apply(timeform, 1)
-    print(dat)
+    # dat["Date"] = pd.to_datetime(dat["Date"])
+    
+    return dat
 
 if __name__ == "__main__":
+    DATASET = "AeroGarden1"
+
     # Initialize Database
-    db = Database(db_name="test.db")
+    db = Database(db_name="dat.db", db_path=f"./data/{DATASET}/")
+
+    db.drop_table(DATASET)
+
+    df = clean_old_set(db.db_path)
+    db.df_to_table(df=df, t_name=DATASET)
 
     # Drop existing table for testing purposes
     db.list_tables()
-    db.drop_table("AeroGarden")
 
-    # Read data from old csv and populate table all at once
-    df1 = pd.read_csv(filepath_or_buffer="./dat_aerogarden.csv")
-    start = datetime.datetime.now()
-    db.df_to_table(df=df1, t_name="AeroGarden")
-    stop = datetime.datetime.now()
-    # print(db.get_df("AeroGarden"))
-    elapsed = stop-start
-    count = df1.shape[0]
-    print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
+    # # Read data from old csv and populate table all at once
+    # df1 = pd.read_csv(filepath_or_buffer="./dat_aerogarden.csv")
+    # start = datetime.datetime.now()
+    # db.df_to_table(df=df1, t_name="AeroGarden")
+    # stop = datetime.datetime.now()
+    # # print(db.get_df("AeroGarden"))
+    # elapsed = stop-start
+    # count = df1.shape[0]
+    # print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
 
-    # Drop existing table for testing purposes
-    db.drop_table("palm")
+    # # Read data from old csv and populate table one row at a time (significantly slower)
+    # table = [
+    #     ("Date", "text", ""),
+    #     ("Soil Moisture", "integer", ""),
+    #     ("Light Intensity", "integer", ""),
+    #     ("Temperature", "real", ""),
+    #     ("Humidity", "real", "")
+    # ]
+    # db.create_table("palm", table)
+    # df2 = pd.read_csv(filepath_or_buffer="./dat_palm.csv")
+    # # keys = f"{df2.keys().to_list()}".replace("[","(").replace("]",")").replace("'","")
+    # start = datetime.datetime.now()
+    # for pd_row in df2.itertuples(index=True, name=None):
+    #     print(type(pd_row))
+    #     db.insert_row(t_name="palm", row=pd_row)
+    # stop = datetime.datetime.now()
+    # # print(db.get_df("palm"))
 
-    # Read data from old csv and populate table one row at a time (significantly slower)
-    table = [
-        ("Date", "text", ""),
-        ("Soil Moisture", "integer", ""),
-        ("Light Intensity", "integer", ""),
-        ("Temperature", "real", ""),
-        ("Humidity", "real", "")
-    ]
-    db.create_table("palm", table)
-    df2 = pd.read_csv(filepath_or_buffer="./dat_palm.csv")
-    # keys = f"{df2.keys().to_list()}".replace("[","(").replace("]",")").replace("'","")
-    start = datetime.datetime.now()
-    for pd_row in df2.itertuples(index=True, name=None):
-        print(type(pd_row))
-        db.insert_row(t_name="palm", row=pd_row)
-    stop = datetime.datetime.now()
-    # print(db.get_df("palm"))
-
-    elapsed = stop-start
-    count = df2.shape[0]
-    print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
-    db.list_tables()
+    # elapsed = stop-start
+    # count = df2.shape[0]
+    # print(f"Inserted {count} rows in {elapsed} seconds ({elapsed/count} per row)")
+    # db.list_tables()
