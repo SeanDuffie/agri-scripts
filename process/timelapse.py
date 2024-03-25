@@ -101,9 +101,17 @@ class Timelapse:
         try:
             vid_writer = cv2.VideoWriter(vid_name, FOURCC, fps, img_res)
             for filename in images:
+                # Read in image file
                 img = cv2.imread(img_dir + filename)            # Read in Raw image
-                # FIXME: This assertion is unnecessarily breaking the code, maybe try a softer warning
-                # assert (img.shape[1], img.shape[0]) == img_res  # Check that the camera resolution is correct
+
+                # If the image is the wrong size, resize it (this happens if there is a mismatched
+                # image resolution or if the output is forced to be different than the input)
+                try:
+                    assert (img.shape[1], img.shape[0]) == img_res
+                except AssertionError:
+                    img = cv2.resize(img, img_res)
+
+                # Append to video
                 vid_writer.write(img)                           # writes out each frame to the video file
 
             vid_writer.release()
