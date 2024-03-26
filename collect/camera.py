@@ -105,8 +105,8 @@ def acq_img(tstmp: datetime.datetime,
         logging.info("Using OpenCV VideoCapture")
         # FIXME: this is throwing errors occasionally when it can't detect the web cam
         cap = cv2.VideoCapture(0)
-        # cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
-        # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, img_size[1])
         # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
         cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
         time.sleep(2)
