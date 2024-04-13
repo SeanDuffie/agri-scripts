@@ -81,12 +81,12 @@ def process_data():
         ## Start Generate Plots ###
         # Plot Total Light
         vis.gen_plot(
-            y_label="Light Intensity"
+            y_label="Light_Intensity"
         )
 
         # Plot Total Soil Moisture
         vis.gen_plot(
-            y_label="Soil Moisture"
+            y_label="Soil_Moisture"
         )
 
         # Plot Total Temperature
