@@ -31,6 +31,8 @@ def post_webhook(url: str) -> bool:
         return True
     except requests.exceptions.ConnectionError:
         return False
+    except requests.exceptions.ReadTimeout:
+        return False
 
 if __name__ == "__main__":
     dest_url = input("Type or copy/paste URL of IFTTT webhook here: ")

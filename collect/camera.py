@@ -63,10 +63,10 @@ def acq_img(tstmp: datetime.datetime,
     cur_img[:,:] = [255, 255, 255]
     logging.info("Starting Camera...")
 
-    if flash:
-        # Enable flash - using webhook for now
-        if not post_webhook(URL_ON):                        # Turn on Lamp for picture
-            logging.error("Flash failed, possible internet outage or unplugged switch?")
+    # if flash:
+    #     # Enable flash - using webhook for now
+    #     if not post_webhook(URL_ON):                        # Turn on Lamp for picture
+    #         logging.error("Flash failed, possible internet outage or unplugged switch?")
 
     # # If 64 bit Raspberry Pi
     # if RPI:
