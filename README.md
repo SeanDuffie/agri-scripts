@@ -72,3 +72,10 @@ Flask Server:
     python -m cProfile -o program.prof .\main_collect.py
     python -m snakeviz .\program.prof
     ```
+
+## Future Developments
+
+    - [ ] Bluetooth for embedded sensors
+        - https://www.theengineeringprojects.com/2023/04/how-to-connect-pi-4-and-esp32-via-bluetooth.html
+        - https://www.reddit.com/r/arduino/comments/mx7x31/file_transfer_using_bluetooth_classic_esp32_sd/
+        - https://randomnerdtutorials.com/display-images-esp32-esp8266-web-server/
