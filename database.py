@@ -15,9 +15,7 @@ import pandas as pd
 # COL: TypeAlias = Dict[]
 
 # Initial Logger Settings
-FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| DATABASE: %(message)s"
-logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
-            datefmt="%Y-%m-%d %H:%M:%S")
+logger = logging.getLogger("app")
 
 
 class Database():
@@ -51,7 +49,7 @@ class Database():
         self.db_path = db_path
         self.create_connection(db_file=db_name, db_path=db_path)
         if self.con is None or self.cursor is None:
-            logging.error("Failed to make connection!")
+            logger.error("Failed to make connection!")
 
 
     def create_connection(self, db_file: str = "my_database.db", db_path: str = "./") -> sqlite3.Connection:
@@ -70,8 +68,8 @@ class Database():
             # Create a cursor
             self.cursor = self.con.cursor()
         except sqlite3.Error as e:
-            logging.error("Failed to create connection!")
             print(e)
+            logger.error("Failed to create connection!")
             sys.exit()
 
     def create_table(self, t_name: str, cols, ref: tuple = None) -> bool:
@@ -128,8 +126,8 @@ class Database():
             self.con.commit()
             return True
         except sqlite3.Error as e:
-            logging.error("Failed to create table from scratch!")
             print(e)
+            logger.error("Failed to create table from scratch!")
             return False
 
     def drop_table(self, t_name: str) -> bool:
@@ -149,8 +147,8 @@ class Database():
             self.con.commit()
             return True
         except sqlite3.Error as e:
-            logging.error("Failed to drop table!")
             print(e)
+            logger.error("Failed to drop table!")
             return False
 
     def list_tables(self):
@@ -161,8 +159,8 @@ class Database():
             self.cursor.execute(sql_format)
             print(self.cursor.fetchall())
         except sqlite3.Error as e:
-            logging.error("Failed to list tables!")
             print(e)
+            logger.error("Failed to list tables!")
 
     def insert_row(self, t_name: str, row, headers: str = ""):
         """ Inserts a row into the specified table
@@ -184,8 +182,8 @@ class Database():
             self.con.commit()
             return True
         except sqlite3.Error as e:
-            logging.error("Failed insert row into table %s!", t_name)
             print(e)
+            logger.error("Failed insert row into table %s!", t_name)
             return False
 
     def delete_row(self, t_name: str, index: int):
@@ -208,8 +206,8 @@ class Database():
             self.con.commit()
             return True
         except sqlite3.Error as e:
-            logging.error("Failed delete row from table %s at index %d!", t_name, index)
             print(e)
+            logger.error("Failed delete row from table %s at index %d!", t_name, index)
             return False
 
     def df_to_table(self, df: pd.DataFrame, t_name: str) -> bool:
@@ -227,8 +225,8 @@ class Database():
             self.con.commit()
             return True
         except sqlite3.Error as e:
-            logging.error("Failed to create a table from dataframe!")
             print(e)
+            logger.error("Failed to create a table from dataframe!")
             return False
 
     def get_df(self, t_name: str) -> pd.DataFrame:
@@ -276,8 +274,8 @@ class Database():
             self.con.commit()
             return True
         except sqlite3.Error as e:
-            logging.error("Custom SQL command failed!")
             print(e)
+            logger.error("Custom SQL command failed!")
             return False
 
     def close(self):
