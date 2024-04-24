@@ -16,9 +16,7 @@ import pandas as pd
 # from typing_extensions import TypeAlias, Annotated
 
 # Initial Logger Settings
-FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| Database:\t%(message)s"
-logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
-            datefmt="%Y-%m-%d %H:%M:%S")
+logger = logging.getLogger("Process")
 
 class Vizualizer:
     """_summary_
@@ -47,7 +45,7 @@ class Vizualizer:
             stop = len(self.d_frame)-1
         assert stop > start
         if start > stop:
-            logging.error("Starting point must be before stopping point.")
+            logger.error("Starting point must be before stopping point.")
             return False
         if title == "":
             title = f"{y_label}_vs_{x_label}"

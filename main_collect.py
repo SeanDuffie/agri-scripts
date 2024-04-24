@@ -11,10 +11,11 @@ import time
 
 import collect
 from database import Database
+import logFormat
 
 # Initial Logger Settings
-FMT_MAIN = "%(asctime)s\t| %(levelname)s\t| Main_Collect:\t%(message)s"
-logging.basicConfig(format=FMT_MAIN, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
+logFormat.format_logs(logger_name="Collect")
+logger = logging.getLogger("Collect")
 
 # Define Path names
 RTDIR = os.path.dirname(__file__)
@@ -46,18 +47,18 @@ def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = Tr
     """_summary_
     """
     # Acquire initial data
-    logging.info("Current time: %s", now)
+    logger.info("Current time: %s", now)
     timestamp = now.strftime("%Y-%m-%d_%Hh")
     img_name = f"{IMGDIR}{timestamp}.jpg"            # image name
 
-    logging.info("Output Image: %s", img_name)
+    logger.info("Output Image: %s", img_name)
     DB.create_connection("dat.db", DATASET)
 
     if sensors:
         ### Start Acquire Sensor Measurements ###
         # data = collect.acq_data(DATASET)
         new_dat = collect.acq_sensors(datetime.datetime.strftime(now, "%Y-%m-%d %H:%M:%S"))
-        logging.info("New Sensor Data = %s", new_dat)
+        logger.info("New Sensor Data = %s", new_dat)
         DB.insert_row(t_name=SAMPLE_NAME, row=new_dat)
         #### End Acquire Sensor Measurements ####
 
@@ -68,7 +69,7 @@ def collect_data(now: datetime.datetime, sensors: bool = True, camera: bool = Tr
                         name=img_name)  # Capture Image
 
     DB.close()
-    logging.info("Scan Finished for %s\n", timestamp)
+    logger.info("Scan Finished for %s\n", timestamp)
 
 def scheduler(camera: bool = True,
               sensors: bool = True,
@@ -106,11 +107,11 @@ def scheduler(camera: bool = True,
             time.sleep(1)
 
 if __name__ == "__main__":
-    logging.info("Version Diagnostics:")
-    logging.info("OS type: %s", os.name)
-    logging.info("Platform: %s\n", sys.platform)
+    logger.info("Version Diagnostics:")
+    logger.info("OS type: %s", os.name)
+    logger.info("Platform: %s\n", sys.platform)
 
-    logging.info("Root Directory: %s", RTDIR)
-    logging.info("Current Dataset: %s", DATASET)
+    logger.info("Root Directory: %s", RTDIR)
+    logger.info("Current Dataset: %s", DATASET)
 
     sys.exit(scheduler(sensors=True))

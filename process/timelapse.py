@@ -13,9 +13,7 @@ from tkinter import filedialog
 import cv2
 
 # Initial Logger Settings
-FMT_MAIN: str = "%(asctime)s | %(levelname)s\t| Timelapse:\t\t%(message)s"
-logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
-                datefmt="%Y-%m-%D %H:%M:%S")
+logger = logging.getLogger("Process")
 
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
 
@@ -30,18 +28,18 @@ class Timelapse:
                 title="Select Current Data File",
                 initialdir=f"{os.getcwd()}\\data\\")
             if path == "":
-                logging.error("Tkinter Filedialog cancelled.")
+                logger.error("Tkinter Filedialog cancelled.")
                 sys.exit(1)
 
         # If autocaps or data don't exist, create them! They are gitignored...
         if not os.path.exists(path):
-            logging.warning("Prompted directory doesn't exist, creating new one:\t%s", path)
+            logger.warning("Prompted directory doesn't exist, creating new one:\t%s", path)
             os.makedirs(path)
 
         self.path = path
         self.set_name = os.path.relpath(path, os.getcwd() + "/data/")
-        logging.info("Path: %s", self.path)
-        logging.info("Set: %s", self.set_name)
+        logger.info("Path: %s", self.path)
+        logger.info("Set: %s", self.set_name)
 
     def append_frames(self, existing_video_path, new_frames) -> None:
         """ Read in an existing video, then append one or more frames from a list.
@@ -89,15 +87,15 @@ class Timelapse:
         # Read in current directory of images
         img_dir = f"{os.path.dirname(self.path)}/autocaps/"
         vid_name = f"{self.path}/{self.set_name}_timelapse_{fps}fps.mp4"
-        logging.info("Reading in Images:\t%s", img_dir)
+        logger.info("Reading in Images:\t%s", img_dir)
 
         # Generate a list of all the frames in the image directory, then sort chronologically
         images = [img for img in os.listdir(img_dir) if img.endswith(".jpg")]
         images.sort()
 
         # Compile image array into a video
-        logging.info("Compiling video:\t%s", vid_name)
-        logging.info("Frame Count:\t%s", len(images))
+        logger.info("Compiling video:\t%s", vid_name)
+        logger.info("Frame Count:\t%s", len(images))
         try:
             vid_writer = cv2.VideoWriter(vid_name, FOURCC, fps, img_res)
             for filename in images:
@@ -115,7 +113,7 @@ class Timelapse:
                 vid_writer.write(img)                           # writes out each frame to the video file
 
             vid_writer.release()
-            logging.info("Time-Lapse Released!\n")
+            logger.info("Time-Lapse Released!\n")
         except AssertionError as e:
             print(e)
             print(f"Camera resolution wrong... Video: {img_res} | Image: {(img.shape[1], img.shape[0])}")

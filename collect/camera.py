@@ -20,20 +20,18 @@ from .constants import ACTIVE_START, ACTIVE_STOP, BIT64, RPI
 from .webhook import post_webhook
 
 # Initial Logger Settings
-FMT_MAIN: str = "%(asctime)s | %(levelname)s\t| Camera:\t\t%(message)s"
-logging.basicConfig(format=FMT_MAIN, level=logging.INFO,
-                datefmt="%Y-%m-%D %H:%M:%S")
+logger = logging.getLogger("app")
 
 
 if RPI:
     if BIT64:
-        logging.info("64-bit System - Using Picamera2...")
+        logger.info("64-bit System - Using Picamera2...")
         from picamera2 import Picamera2  # For 64-bit OS
     else:
-        logging.info("32-bit System - Using Picamera...")
+        logger.info("32-bit System - Using Picamera...")
         from picamera import PiCamera  # For 32-bit OS
 else:
-    logging.info("Not Linux - Ignoring Picamera...")
+    logger.info("Not Linux - Ignoring Picamera...")
 
 # Webhook URLs for IFTTT/Smart Plug connected lamps
 URL_ON = 'https://maker.ifttt.com/trigger/wake_plants/with/key/RKAAitopP0prnKOxsyr-5'
@@ -61,17 +59,17 @@ def acq_img(tstmp: datetime.datetime,
     """
     cur_img = np.zeros([img_size[1], img_size[0], 3], dtype = np.uint8)
     cur_img[:,:] = [255, 255, 255]
-    logging.info("Starting Camera...")
+    logger.info("Starting Camera...")
 
     # if flash:
     #     # Enable flash - using webhook for now
     #     if not post_webhook(URL_ON):                        # Turn on Lamp for picture
-    #         logging.error("Flash failed, possible internet outage or unplugged switch?")
+    #         logger.error("Flash failed, possible internet outage or unplugged switch?")
 
     # # If 64 bit Raspberry Pi
     # if RPI:
     #     if BIT64:
-    #         logging.info("Using 64 bit PiCamera2")
+    #         logger.info("Using 64 bit PiCamera2")
     #         with Picamera2() as picam2:
     #             capture_config = picam2.create_still_configuration(
     #                 main={
@@ -88,7 +86,7 @@ def acq_img(tstmp: datetime.datetime,
     #             cur_img = cv2.resize(cur_img, img_size)
     #     # If 32 bit Raspberry Pi
     #     else:
-    #         logging.info("Using 32 bit PiCamera")
+    #         logger.info("Using 32 bit PiCamera")
     #         with PiCamera() as picam:
     #             picam.resolution = img_size
     #             picam.framerate = 24
@@ -102,7 +100,7 @@ def acq_img(tstmp: datetime.datetime,
     # else:
     ret = False
     while not ret:
-        logging.info("Using OpenCV VideoCapture")
+        logger.info("Using OpenCV VideoCapture")
         # FIXME: this is throwing errors occasionally when it can't detect the web cam
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, img_size[0])
@@ -110,18 +108,18 @@ def acq_img(tstmp: datetime.datetime,
         # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
         cap.set(cv2.CAP_PROP_EXPOSURE, 3.0)
         time.sleep(2)
-        print(img_size)
+        logger.info(img_size)
         ret, cur_img = cap.read()
         if not ret:
-            logging.error("Image not read! Attempting again...")
+            logger.error("Image not read! Attempting again...")
         cap.release()
 
     if flash and not ACTIVE_START <= tstmp.hour <= ACTIVE_STOP:
         # Disable Flash - using webhook for now
         if not post_webhook(URL_OFF):                       # Turn off Lamp if Night
-            logging.error("Flash failed, possible internet outage or unplugged switch?")
+            logger.error("Flash failed, possible internet outage or unplugged switch?")
 
-    logging.info("Picture Acquired!")
+    logger.info("Picture Acquired!")
     timestamp = tstmp.strftime("%Y-%m-%d_%Hh")
     return proc_img(cur_img, timestamp, name)
 
@@ -135,7 +133,7 @@ def proc_img(img: NDArray, tstmp: str, name: str):
     Returns:
         NDArray: edited image with overlay applied
     """
-    logging.info("Processing Image...")
+    logger.info("Processing Image...")
 
     # Add Timestamp
     off_x, off_y = (50, 50)
@@ -156,8 +154,8 @@ def proc_img(img: NDArray, tstmp: str, name: str):
     try:
         cv2.imwrite(name, img)
     except AssertionError as e:
-        logging.error("BAD! Photo was empty, camera probably not initialized.")
-        print(e)
+        logger.error(e)
+        logger.error("BAD! Photo was empty, camera probably not initialized.")
 
     return img
 

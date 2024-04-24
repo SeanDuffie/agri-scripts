@@ -9,22 +9,25 @@
 import datetime
 import os
 import sys
+import logging
 
 import cv2
 
 import process
 from database import Database
 import pandas as pd
+import logFormat
 
 # from tkinter import filedialog
-
+logFormat.format_logs(logger_name="Process")
+logger = logging.getLogger("Process")
 
 
 ### Start Initial Setup ###
 # Versions
-print("Version Diagnostics:")
-print("OS type: ", os.name)
-print("Platform: ", sys.platform)
+logger.info("Version Diagnostics:")
+logger.info("OS type: %s", os.name)
+logger.info("Platform: %s", sys.platform)
 
 # Acquire initial data
 NOW = datetime.datetime.now()
@@ -32,18 +35,16 @@ M = NOW.strftime("%m")
 D = NOW.strftime("%d")
 H = NOW.strftime("%H")
 TIMESTAMP = NOW.strftime("%Y-%m-%d_%Hh")
-print("Current time: ", NOW)
-print()
+logger.info("Current time: %s\n", NOW)
 
 
 # Define Path names
 RTDIR = os.path.dirname(__file__)
 
 options = [os.path.basename(filename) for filename in os.listdir(f"{RTDIR}/data")]
-print("Dataset options:")
-# print(f"({key}) {set}" for key, set in enumerate(options))
+logger.info("Dataset options:")
 for key, dat in enumerate(options):
-    print(f"({key}) {dat}")
+    logger.info("(%d) %s", key, dat)
 sel = int(input("Which dataset do you want to process? "))
 
 DATASET = f"{RTDIR}/data/{options[sel]}/"
@@ -58,9 +59,8 @@ if not os.path.exists(IMGDIR):
 FPS = 24                                    # video fps
 IMG_SIZE = (1920, 1080)                     # video resolution
 
-print("Root: ", RTDIR)
-print("Current Dataset: ", DATASET)
-print()
+logger.info("Root: %s", RTDIR)
+logger.info("Current Dataset: %s\n", DATASET)
 #### End Initial Setup ####
 
 def process_data():
@@ -70,12 +70,12 @@ def process_data():
         TODO: process.DATASET may be better as a command line argument or a function parameter
     """
     ### Start Post Processing Video Compilation ###
-    print("Loading Database")
+    logger.info("Loading Database")
     db = Database(db_name="dat.db", db_path=DATASET)
     try:
         df = db.get_df(options[sel])
 
-        print("Starting Graphs")
+        logger.info("Starting Graphs")
         vis = process.Vizualizer(dframe=df, out_path=DATASET)
 
         ## Start Generate Plots ###
@@ -100,11 +100,11 @@ def process_data():
         )
     ## End Generate Plots ##
     except pd.errors.DatabaseError as e:
-        print("Failed to open table")
-        print(e)
+        logger.error("Failed to open table")
+        logger.error(e)
 
 
-    print("Starting Timelapse")
+    logger.info("Starting Timelapse")
     tl = process.Timelapse(path=DATASET)
     # TODO: Append frames to save time instead of compiling the whole video
     # if os.path.exists(f"{DATASET}")
