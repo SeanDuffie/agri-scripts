@@ -10,8 +10,8 @@ import sys
 import time
 
 import collect
-from database import Database
 import logFormat
+from database import Database
 
 # Initial Logger Settings
 logFormat.format_logs(logger_name="Collect")
