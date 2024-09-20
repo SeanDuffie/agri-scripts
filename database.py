@@ -20,7 +20,7 @@ logger = logging.getLogger("app")
 
 class Database():
     """ This class serves as a wrapper for my SQL database.
-    
+
         Create Connection
         Create Table
             from dataframe
@@ -37,7 +37,7 @@ class Database():
     """
     def __init__(self, db_name: str = "my_database.db", db_path: str = "./") -> None:
         """ Constructor for the database class
-        
+
         The SQLite3 connection and cursor are both constructed on initial setup, but if
         close() is ever called then it must be reopened using create_connection() later on.
 
@@ -304,7 +304,7 @@ def clean_old_set(csv_dir: str):
 
     dat["Date"] = dat["Date"].apply(timeform, 1)
     # dat["Date"] = pd.to_datetime(dat["Date"])
-    
+
     return dat
 
 if __name__ == "__main__":
